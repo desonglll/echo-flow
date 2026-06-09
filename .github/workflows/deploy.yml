@@ -1,0 +1,39 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # 或者你的主分支叫 master
+
+# 授予操作 Pages 的权限
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 核心：设置 Bun 环境
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # 使用 Bun 安装依赖，比 npm 快数倍
+      - name: Install dependencies
+        run: bun install
+
+      # 使用 Bun 编译
+      - name: Build Project
+        run: bun run build
+
+      # 将 dist 目录部署到 gh-pages 分支
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist # Vite 默认输出的文件夹
+          branch: gh-pages # 部署到的目标分支（Actions 会自动创建）
