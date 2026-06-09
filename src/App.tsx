@@ -24,42 +24,101 @@ interface WordItem {
   type: 'perfect' | 'liaison' | 'flat' | 'none';
   ipa: string;
   tip: string;
+  definition: string;
 }
 
-// Data for the tech podcast transcript
+// Data for the tech podcast transcript (with full definitions)
 const transcriptWords: WordItem[] = [
-  { text: "The", type: "none", ipa: "ðə", tip: "" },
-  { text: "future", type: "perfect", ipa: "ˈfjuː.tʃər", tip: "Perfect vowel duration and clean release." },
-  { text: "of", type: "none", ipa: "əv", tip: "" },
-  { text: "LLMs", type: "perfect", ipa: "el.el.emz", tip: "Crisp pronunciation of initials with correct nasal final sound." },
-  { text: "and", type: "none", ipa: "ænd", tip: "" },
+  { 
+    text: "The", 
+    type: "none", 
+    ipa: "ðə", 
+    tip: "Standard weak form definite article.", 
+    definition: "art. 这，那（用于特指所指的人、物或事物）" 
+  },
+  { 
+    text: "future", 
+    type: "perfect", 
+    ipa: "ˈfjuː.tʃər", 
+    tip: "Perfect vowel duration and clean release.", 
+    definition: "n. 未来，前途 | adj. 将来的，未来的" 
+  },
+  { 
+    text: "of", 
+    type: "none", 
+    ipa: "əv", 
+    tip: "Standard weak form preposition.", 
+    definition: "prep. 属于……的，关于，由……制成" 
+  },
+  { 
+    text: "LLMs", 
+    type: "perfect", 
+    ipa: "el.el.emz", 
+    tip: "Crisp pronunciation of initials with correct nasal final sound.", 
+    definition: "n. 大语言模型 (Large Language Models 的缩写)" 
+  },
+  { 
+    text: "and", 
+    type: "none", 
+    ipa: "ænd", 
+    tip: "Standard coordinating conjunction.", 
+    definition: "conj. 和，与，而且，然后" 
+  },
   { 
     text: "agentic", 
     type: "liaison", 
     ipa: "əˈdʒen.tɪk", 
-    tip: "✨ Mouth Tip: Link the 'c' sound into the next vowel 'w' (agentic-workflows) without a hard glottal stop." 
+    tip: "✨ Mouth Tip: Link the 'c' sound into the next vowel 'w' (agentic-workflows) without a hard glottal stop.", 
+    definition: "adj. (语言学/AI) 代理的，有主动权的；(计算机) 智能体的" 
   },
   { 
     text: "workflows", 
     type: "flat", 
     ipa: "ˈwɜːk.fləʊz", 
-    tip: "Pitch Drop: Stress the first syllable 'work-' and let '-flows' drop in pitch to sound natural." 
+    tip: "Pitch Drop: Stress the first syllable 'work-' and let '-flows' drop in pitch to sound natural.", 
+    definition: "n. 工作流，工作步骤的序列" 
   },
-  { text: "will", type: "none", ipa: "wɪl", tip: "" },
-  { text: "require", type: "perfect", ipa: "rɪˈkwaɪər", tip: "Excellent rhotic vowel transition." },
-  { text: "human-in-the-loop", type: "perfect", ipa: "ˌhjuː.mən.ɪn.ðə.luːp", tip: "Superb liaison linking. Sounded exactly like 'human-in-the-loop'." },
+  { 
+    text: "will", 
+    type: "none", 
+    ipa: "wɪl", 
+    tip: "Modal verb indicating future action.", 
+    definition: "v. 将，会；愿意，要 | n. 意志，遗嘱" 
+  },
+  { 
+    text: "require", 
+    type: "perfect", 
+    ipa: "rɪˈkwaɪər", 
+    tip: "Excellent rhotic vowel transition.", 
+    definition: "v. 需要，要求，命令" 
+  },
+  { 
+    text: "human-in-the-loop", 
+    type: "perfect", 
+    ipa: "ˌhjuː.mən.ɪn.ðə.luːp", 
+    tip: "Superb liaison linking. Sounded exactly like 'human-in-the-loop'.", 
+    definition: "n. 人机协同，人机回环控制（指AI流程中引入人类审核）" 
+  },
   { 
     text: "autonomous", 
     type: "liaison", 
     ipa: "ɔːˈtɒn.ə.məs", 
-    tip: "✨ Mouth Tip: Blend the final 's' sound directly into the 'f' of 'feedback' for a seamless transition." 
+    tip: "✨ Mouth Tip: Blend the final 's' sound directly into the 'f' of 'feedback' for a seamless transition.", 
+    definition: "adj. 自治的，自主的，独立存在的" 
   },
-  { text: "feedback", type: "perfect", ipa: "ˈfiːd.bæk", tip: "Clean stop consonant articulation." },
+  { 
+    text: "feedback", 
+    type: "perfect", 
+    ipa: "ˈfiːd.bæk", 
+    tip: "Clean stop consonant articulation.", 
+    definition: "n. 反馈，反馈信息" 
+  },
   { 
     text: "loops.", 
     type: "flat", 
     ipa: "luːps", 
-    tip: "Flat Intonation: Raise pitch slightly at 'loops' to indicate continuation of the clause." 
+    tip: "Flat Intonation: Raise pitch slightly at 'loops' to indicate continuation of the clause.", 
+    definition: "n. 循环，回路，圈" 
   }
 ];
 
@@ -68,7 +127,12 @@ export default function App() {
   const [shadowState, setShadowState] = useState<'ready' | 'recording' | 'analyzing' | 'result'>('ready');
   const [showFeedback, setShowFeedback] = useState<boolean>(false);
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
+  const [popoverDirection, setPopoverDirection] = useState<'top' | 'bottom'>('top');
   
+  // Mouse Follower Coordinates
+  const [mousePos, setMousePos] = useState({ x: -400, y: -400 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // Audio playback simulation states
   const [isPlayingNative, setIsPlayingNative] = useState<boolean>(false);
   const [isPlayingUser, setIsPlayingUser] = useState<boolean>(false);
@@ -89,6 +153,17 @@ export default function App() {
   
   // Analyzing state sub-text updates
   const [analyzingMessage, setAnalyzingMessage] = useState<string>("Analyzing voice alignment...");
+
+  // Capture mouse move for dynamic spotlight glow
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setMousePos({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+  };
 
   // Web Audio Synth to create high fidelity sound cues
   const playSynthSound = (freqs: number[], duration: number = 0.1, type: OscillatorType = 'sine') => {
@@ -168,7 +243,6 @@ export default function App() {
         const diff = (Date.now() - start) / 1000;
         setRecordingMillis(diff);
         if (diff >= 15) {
-          // Trigger evaluation auto-stop at 15s limit
           handleMainActionClick();
         }
       }, 100);
@@ -194,7 +268,7 @@ export default function App() {
       const animateScore = (now: number) => {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const easedProgress = progress * (2 - progress); // Ease out quad
+        const easedProgress = progress * (2 - progress);
         const currentScore = Math.floor(easedProgress * end);
         setScoreCount(currentScore);
         
@@ -227,7 +301,7 @@ export default function App() {
             clearInterval(timer);
             return 100;
           }
-          return prev + 2; // Increments to 100 over ~1.1s
+          return prev + 2;
         });
       }, 22);
       return () => clearInterval(timer);
@@ -316,6 +390,7 @@ export default function App() {
     }
   };
 
+
   // Wave paths for results and reference curves
   const nativeReferencePath = "M 0 12 C 12 5, 20 3, 30 12 C 40 21, 48 21, 58 12 C 68 3, 76 3, 86 12 C 92 19, 96 19, 100 12";
   const userResultPath = "M 0 12 C 12 6, 20 4, 30 12 C 34 12, 38 12, 42 12 C 46 12, 48 21, 58 12 C 68 4, 72 12, 75 12 C 78 12, 80 12, 86 12 C 92 18, 96 18, 100 12";
@@ -324,10 +399,26 @@ export default function App() {
   const recordLimitPercent = Math.min((recordingMillis / 15) * 100, 100);
 
   return (
-    <div className="flex h-screen w-full bg-[#09090b] text-[#ededef] font-sans overflow-hidden select-none animate-slide-up">
-      
+    <div 
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      className="flex h-screen w-full bg-[#09090b] text-[#ededef] font-sans overflow-hidden select-none animate-slide-up relative"
+    >
+      {/* Mouse Follower Glow Layer */}
+      <div 
+        className="absolute pointer-events-none rounded-full blur-[110px] opacity-40 transition-all duration-300 hidden md:block"
+        style={{
+          left: `${mousePos.x - 200}px`,
+          top: `${mousePos.y - 200}px`,
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)',
+          zIndex: 0,
+        }}
+      />
+
       {/* Sidebar Navigation */}
-      <aside className="w-[260px] border-r border-[#222226]/40 bg-[#09090b] flex flex-col justify-between shrink-0">
+      <aside className="w-[260px] border-r border-[#222226]/40 bg-[#09090b] flex flex-col justify-between shrink-0 z-10">
         <div className="flex flex-col">
           {/* Logo */}
           <div className="p-6 flex flex-col gap-1">
@@ -421,7 +512,7 @@ export default function App() {
       </aside>
 
       {/* Main Workspace Area */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto dots-grid">
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto z-10">
         
         {/* Workspace Top Header Bar */}
         <header className="h-[60px] border-b border-[#222226]/40 bg-[#09090b]/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
@@ -504,9 +595,9 @@ export default function App() {
 
             {/* Instruction tooltip */}
             <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-3.5 flex items-start gap-3 text-xs text-zinc-400">
-              <Info className="w-4 h-4 text-zinc-650 shrink-0 mt-0.5" />
+              <Info className="w-4 h-4 text-zinc-600 shrink-0 mt-0.5" />
               <p className="leading-relaxed">
-                Practice speech shadowing. Switch on the <strong className="text-zinc-200">Overlay</strong> to see linking evaluations. Click corrected words like <strong className="text-amber-400">agentic</strong> to reveal visual tips.
+                Click **any word** below to check its phonetic definition and translation. Switch on the **Overlay** to see AI speech linkage logs.
               </p>
             </div>
 
@@ -522,7 +613,6 @@ export default function App() {
                 let inlineStyle = {};
                 
                 if (isEvaluating) {
-                  // Staggered fade-in delay based on index for evaluation overlay reveal
                   inlineStyle = { 
                     animationDelay: `${idx * 60}ms`,
                     animationFillMode: 'both' 
@@ -543,17 +633,23 @@ export default function App() {
                   if (item.type === 'liaison') {
                     highlightClass += " ring-2 ring-[#fbbf24]/50 bg-[#fbbf24]/10 shadow-[0_0_12px_rgba(251,191,36,0.15)]";
                   } else {
-                    highlightClass += " ring-2 ring-zinc-700 bg-zinc-800 shadow-[0_0_10px_rgba(255,255,255,0.05)]";
+                    highlightClass += " ring-2 ring-zinc-750 bg-zinc-850 shadow-[0_0_10px_rgba(255,255,255,0.04)] text-white";
                   }
                 }
 
                 return (
                   <span key={idx} className="relative inline-block mx-0.5" style={inlineStyle}>
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
                         playWordAudio(item, idx, 'native');
-                        if (isEvaluating && (item.type === 'liaison' || item.type === 'flat')) {
-                          setSelectedWordIndex(isSelected ? null : idx);
+                        if (isSelected) {
+                          setSelectedWordIndex(null);
+                        } else {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          // If the word's top is less than 280px from the top of the screen, open popover below
+                          const showBelow = rect.top < 280;
+                          setPopoverDirection(showBelow ? 'bottom' : 'top');
+                          setSelectedWordIndex(idx);
                         }
                       }}
                       className={`${highlightClass} ${underlineClass} focus:outline-none`}
@@ -569,9 +665,13 @@ export default function App() {
                       </span>
                     )}
 
-                    {/* Floating Glassmorphism correction popover */}
-                    {isSelected && isEvaluating && (
-                      <div className="absolute bottom-full left-1/2 mb-3.5 z-50 w-[300px] bg-[#09090b]/90 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.7)] animate-spring-in flex flex-col gap-3.5">
+                    {/* Floating Glassmorphism Lookup Tooltip */}
+                    {isSelected && (
+                      <div className={`absolute left-1/2 ${
+                        popoverDirection === 'top' 
+                          ? 'bottom-full mb-3.5 animate-spring-in' 
+                          : 'top-full mt-3.5 animate-spring-in-below'
+                      } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5`}>
                         
                         {/* Popover Header */}
                         <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
@@ -590,78 +690,87 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* Interactive Wave Comparison */}
-                        <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
-                          <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Pitch Contour Comparison</span>
-                          
-                          {/* Native Waveform */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
-                            <div className="flex-1 h-6 flex items-center relative overflow-hidden">
-                              <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                                <path 
-                                  d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
-                                  fill="none" 
-                                  stroke="#52525b" 
-                                  strokeWidth="2.0" 
-                                  strokeLinecap="round"
-                                />
-                              </svg>
-                            </div>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                playWordAudio(item, idx, 'native');
-                              }}
-                              className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
-                            >
-                              <Play className="w-3 h-3 fill-current" />
-                            </button>
-                          </div>
-
-                          {/* User Waveform */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-[9px] text-amber-400 font-mono w-10 shrink-0">You:</span>
-                            <div className="flex-1 h-6 flex items-center relative overflow-hidden">
-                              <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                                {item.type === 'liaison' ? (
-                                  <>
-                                    <path 
-                                      d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
-                                      fill="none" 
-                                      stroke="#f59e0b" 
-                                      strokeWidth="2.0" 
-                                      strokeDasharray="4 2.5"
-                                      strokeLinecap="round"
-                                    />
-                                    <circle cx="49" cy="12" r="2.5" fill="#ef4444" className="animate-ping" />
-                                  </>
-                                ) : (
-                                  <path 
-                                    d="M0 12 H100" 
-                                    fill="none" 
-                                    stroke="#44444a" 
-                                    strokeWidth="1.5" 
-                                    strokeLinecap="round"
-                                  />
-                                )}
-                              </svg>
-                            </div>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                playWordAudio(item, idx, 'user');
-                              }}
-                              className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
-                            >
-                              <Play className="w-3 h-3 fill-current" />
-                            </button>
-                          </div>
+                        {/* Dictionary definition */}
+                        <div className="bg-[#121214]/80 border border-zinc-800/60 rounded-lg p-2.5 flex flex-col gap-1.5 text-left">
+                          <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Dictionary Definition</span>
+                          <span className="text-xs text-zinc-200 leading-relaxed font-normal">{item.definition}</span>
                         </div>
 
+                        {/* Speech Correction Wave Comparison (only active in result overlay mode for liaisons/flats) */}
+                        {isEvaluating && (item.type === 'liaison' || item.type === 'flat') && (
+                          <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
+                            <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Pitch Contour Comparison</span>
+                            
+                            {/* Native Waveform */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
+                              <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                                <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                                  <path 
+                                    d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
+                                    fill="none" 
+                                    stroke="#52525b" 
+                                    strokeWidth="2.0" 
+                                    strokeLinecap="round"
+                                  />
+                                </svg>
+                              </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  playWordAudio(item, idx, 'native');
+                                }}
+                                className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                              >
+                                <Play className="w-3 h-3 fill-current" />
+                              </button>
+                            </div>
+
+                            {/* User Waveform */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] text-amber-400 font-mono w-10 shrink-0">You:</span>
+                              <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                                <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                                  {item.type === 'liaison' ? (
+                                    <>
+                                      <path 
+                                        d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
+                                        fill="none" 
+                                        stroke="#f59e0b" 
+                                        strokeWidth="2.0" 
+                                        strokeDasharray="4 2.5"
+                                        strokeLinecap="round"
+                                      />
+                                      <circle cx="49" cy="12" r="2.5" fill="#ef4444" className="animate-ping" />
+                                    </>
+                                  ) : (
+                                    <path 
+                                      d="M0 12 H100" 
+                                      fill="none" 
+                                      stroke="#44444a" 
+                                      strokeWidth="1.5" 
+                                      strokeLinecap="round"
+                                    />
+                                  )}
+                                </svg>
+                              </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  playWordAudio(item, idx, 'user');
+                                }}
+                                className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                              >
+                                <Play className="w-3 h-3 fill-current" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {/* AI Tip Box */}
-                        <div className="bg-[#fbbf24]/5 border border-[#fbbf24]/10 rounded-lg p-3 text-[11px] text-[#fbbf24] leading-relaxed">
-                          {item.tip}
+                        <div className="bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-[11px] text-zinc-400 leading-relaxed text-left">
+                          <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono block mb-1">Acoustic Guidance</span>
+                          {isEvaluating && (item.type === 'liaison' || item.type === 'flat') ? item.tip : "Focus on maintaining clean vocal articulation during connected speech."}
                         </div>
 
                         {/* Practice Specific Word CTA */}
@@ -674,7 +783,7 @@ export default function App() {
                               handleMainActionClick();
                             }, 300);
                           }}
-                          className="w-full bg-zinc-900 border border-zinc-800/80 hover:border-[#fbbf24]/40 hover:text-white text-zinc-300 text-xs font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer group/cta"
+                          className="w-full bg-zinc-900 border border-zinc-800/80 hover:border-emerald-500/40 hover:text-white text-zinc-300 text-xs font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer group/cta"
                         >
                           <Mic className="w-3.5 h-3.5 group-hover/cta:animate-bounce" />
                           <span>Practice Isolating This Word</span>
@@ -696,7 +805,7 @@ export default function App() {
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" /> Perfect (9)</span>
                   <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Liaison (2)</span>
-                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-zinc-650" /> Flat (2)</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> Flat (2)</span>
                 </div>
               </div>
             )}
@@ -904,7 +1013,6 @@ export default function App() {
                       </>
                     )}
                     {shadowState === 'analyzing' && (
-                      // Monospace percentage counter during loading state
                       <span className="text-xs font-mono text-[#10b981] font-bold">{analyzingProgress}%</span>
                     )}
                     {shadowState === 'result' && (
