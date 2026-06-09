@@ -625,31 +625,31 @@ export default function App() {
               
               {/* Left Column - Transcript Material */}
               <div className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]">
-                <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 shrink-0">
-                  <div className="flex flex-col gap-0.5">
+                <div className="flex items-center justify-between border-b border-zinc-800/60 pb-4 shrink-0">
+                  <div className="flex flex-col gap-1">
                     {shadowState === 'recording' ? (
                       <>
-                        <span className="text-[9px] tracking-[0.2em] text-red-400 font-bold uppercase font-mono flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-red-505 rounded-full inline-block animate-pulse bg-red-500" />
+                        <span className="text-[11px] tracking-[0.2em] text-red-400 font-extrabold uppercase font-mono flex items-center gap-1.5">
+                          <span className="w-2 h-2 bg-red-500 rounded-full inline-block animate-pulse" />
                           ASR DECODER ACTIVE
                         </span>
-                        <h2 className="text-sm font-semibold text-zinc-200">Real-time Recognition Feed</h2>
+                        <h2 className="text-base font-bold text-zinc-100">Real-time Recognition Feed</h2>
                       </>
                     ) : (
                       <>
-                        <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 01 / target text</span>
-                        <h2 className="text-sm font-semibold text-zinc-300">Speech Target Material</h2>
+                        <span className="text-[11px] tracking-[0.2em] text-[#10b981] font-extrabold uppercase font-mono">STEP 01 / target text</span>
+                        <h2 className="text-base font-bold text-zinc-100">Speech Target Material</h2>
                       </>
                     )}
                   </div>
                   {shadowState === 'recording' ? (
-                    <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-400 bg-zinc-950 px-2 py-0.5 border border-zinc-850 rounded">
-                      <span className="text-[#10b981] font-bold">16KHz</span>
-                      <span className="text-zinc-600">|</span>
+                    <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-300 bg-zinc-950 px-2.5 py-0.5 border border-zinc-800 rounded-lg">
+                      <span className="text-[#10b981] font-extrabold">16KHz</span>
+                      <span className="text-zinc-700">|</span>
                       <span>ACCURACY CODED</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-550 bg-zinc-950 px-2 py-0.5 border border-zinc-850 rounded">
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-300 bg-zinc-950 px-2.5 py-0.5 border border-zinc-800 rounded-lg">
                       <span>TIMELINE ACTIVE</span>
                     </div>
                   )}
@@ -659,7 +659,7 @@ export default function App() {
                 <div className="flex-1 py-2 overflow-hidden flex items-start gap-4 pr-2 select-text">
                   
                   {/* Podcasting Line Timestamps */}
-                  <div className="flex flex-col gap-8 text-[9px] font-mono text-zinc-600 w-10 pt-1 shrink-0 border-r border-zinc-800/40 pr-2.5">
+                  <div className="flex flex-col gap-[34px] text-[11px] font-mono text-zinc-400 w-12 pt-1 shrink-0 border-r border-zinc-800 pr-3.5">
                     <div className="h-6 flex items-center justify-end">00:00</div>
                     <div className="h-6 flex items-center justify-end">00:03</div>
                     <div className="h-6 flex items-center justify-end">00:07</div>
@@ -667,13 +667,13 @@ export default function App() {
                     <div className="h-6 flex items-center justify-end">00:13</div>
                   </div>
 
-                  {/* Words Paragraph */}
-                  <div className="flex-1 leading-[2.9rem] tracking-wide text-[19px] font-sans font-light text-zinc-300">
+                  {/* Words Paragraph (Duolingo-inspired size, spacing, and bold contrast) */}
+                  <div className="flex-1 leading-[3.3rem] tracking-wide text-[24px] font-sans font-bold text-zinc-100">
                     {transcriptWords.map((item, idx) => {
                       const isSelected = selectedWordIndex === idx;
                       
                       // Default styling with premium springy hover transformations
-                      let textClass = "text-zinc-300 hover:text-white hover:bg-zinc-800/50 hover:scale-105 hover:-translate-y-0.5 active:scale-95 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-350 ease-out transform";
+                      let textClass = "text-zinc-100 hover:text-white hover:bg-[#27272a] hover:scale-105 hover:-translate-y-0.5 active:scale-95 px-2 py-0.5 rounded cursor-pointer transition-all duration-350 ease-out transform inline-block";
                       
                       // Highlight logic during active recording
                       if (shadowState === 'recording') {
@@ -683,19 +683,19 @@ export default function App() {
                         
                         if (isActive) {
                           // Currently speaking word: active glow with spring pop
-                          textClass = "text-white bg-zinc-850 px-1.5 py-0.5 rounded cursor-pointer ring-2 ring-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)] scale-105 -translate-y-0.5 font-normal transition-all duration-300 ease-out transform inline-block";
+                          textClass = "text-white bg-zinc-800 px-2 py-0.5 rounded cursor-pointer ring-2 ring-emerald-450 shadow-[0_0_15px_rgba(16,185,129,0.35)] scale-105 -translate-y-0.5 font-bold transition-all duration-300 ease-out transform inline-block";
                         } else if (isSpoken) {
-                          // Already spoken: accuracy color coding
+                          // Already spoken: accuracy color coding (Duolingo-inspired high contrast)
                           if (item.accuracy === 'good') {
-                            textClass = "text-[#34d399] bg-[#10b981]/8 px-1.5 py-0.5 rounded cursor-pointer border-b border-[#10b981]/30 transition-colors duration-300";
+                            textClass = "text-[#58cc02] bg-[#58cc02]/15 px-2 py-0.5 rounded cursor-pointer border-b-2 border-[#58cc02] font-black inline-block";
                           } else if (item.accuracy === 'average') {
-                            textClass = "text-[#fbbf24] bg-[#fbbf24]/8 px-1.5 py-0.5 rounded cursor-pointer border-b border-dashed border-[#fbbf24]/40 transition-colors duration-300";
+                            textClass = "text-[#ff9600] bg-[#ff9600]/15 px-2 py-0.5 rounded cursor-pointer border-b-2 border-dashed border-[#ff9600] font-black inline-block";
                           } else {
-                            textClass = "text-[#ef4444] bg-[#ef4444]/8 px-1.5 py-0.5 rounded cursor-pointer underline decoration-wavy decoration-[#ef4444]/50 underline-offset-4 transition-colors duration-300";
+                            textClass = "text-[#ea2b2b] bg-[#ea2b2b]/15 px-2 py-0.5 rounded cursor-pointer border-b-2 border-dotted border-[#ea2b2b] font-black inline-block";
                           }
                         } else {
-                          // Future upcoming words: dimmed and blurred
-                          textClass = "text-zinc-650 opacity-30 blur-[0.5px] px-1.5 py-0.5 rounded cursor-not-allowed transition-all duration-300";
+                          // Future upcoming words: dimmed but readable without blur
+                          textClass = "text-zinc-500 opacity-50 px-2 py-0.5 rounded cursor-not-allowed transition-all duration-300 inline-block";
                         }
                       }
 
@@ -736,11 +736,11 @@ export default function App() {
                 {/* Live ASR Telemetry Console */}
                 {shadowState === 'recording' ? (
                   <div className="mt-2 bg-[#121214]/90 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1.5 font-mono text-left animate-slide-up shrink-0">
-                    <div className="flex items-center justify-between border-b border-zinc-800/50 pb-1">
-                      <span className="text-[8px] uppercase tracking-wider text-zinc-550 font-bold">ASR Engine Telemetry Log</span>
-                      <span className="text-[8px] text-[#10b981] font-semibold flex items-center gap-1.5">
-                        <span className="w-1 h-1 bg-[#10b981] rounded-full inline-block animate-pulse" />
-                        <span className="text-zinc-400">STREAMING DECODE</span>
+                    <div className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                      <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-extrabold">ASR Engine Telemetry Log</span>
+                      <span className="text-[11px] text-[#10b981] font-bold flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full inline-block animate-pulse" />
+                        <span className="text-zinc-300">STREAMING DECODE</span>
                         <div className="flex items-center gap-0.5 h-2.5">
                           <div className="w-0.5 h-full bg-[#10b981] rounded-full animate-audio-bar-1" />
                           <div className="w-0.5 h-full bg-[#10b981] rounded-full animate-audio-bar-2" />
@@ -748,29 +748,29 @@ export default function App() {
                         </div>
                       </span>
                     </div>
-                    <div className="text-[10px] text-zinc-300 leading-normal flex items-start gap-1">
+                    <div className="text-[12px] text-zinc-100 leading-normal flex items-start gap-1.5">
                       <span className="text-[#10b981] shrink-0 font-bold">&gt;_ ASR:</span>
-                      <span className="text-zinc-200">
+                      <span className="text-zinc-100 font-medium">
                         {currentActiveWordIndex >= 0 ? (
                           <>
                             {transcriptWords.slice(0, currentActiveWordIndex + 1).map(w => w.text).join(" ")}
-                            <span className="inline-block w-1.5 h-3 bg-[#10b981] ml-0.5 animate-cursor" />
+                            <span className="inline-block w-1.5 h-3.5 bg-[#10b981] ml-0.5 animate-cursor" />
                           </>
                         ) : (
-                          <span className="text-zinc-600 italic">Listening for speech tokens...</span>
+                          <span className="text-zinc-400 italic">Listening for speech tokens...</span>
                         )}
                       </span>
                     </div>
                   </div>
                 ) : shadowState === 'result' ? (
-                  <div className="mt-2 bg-zinc-950/40 border border-zinc-905 rounded-xl p-3 flex items-center justify-between font-mono text-left shrink-0">
-                    <span className="text-[8px] uppercase tracking-wider text-zinc-550 font-bold">ASR Session summary</span>
-                    <span className="text-[9px] text-[#10b981] font-semibold">13/13 WORDS PROCESSED</span>
+                  <div className="mt-2 bg-zinc-950 border border-zinc-800 rounded-xl p-3 flex items-center justify-between font-mono text-left shrink-0">
+                    <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-extrabold">ASR Session summary</span>
+                    <span className="text-[11px] text-[#10b981] font-bold">13/13 WORDS PROCESSED</span>
                   </div>
                 ) : (
-                  <div className="mt-2 bg-zinc-950/40 border border-zinc-905 rounded-xl p-3 flex items-center justify-between font-mono text-left shrink-0">
-                    <span className="text-[8px] uppercase tracking-wider text-zinc-550 font-bold">ASR DECODER</span>
-                    <span className="text-[9px] text-zinc-555">READY FOR VOICE INPUT</span>
+                  <div className="mt-2 bg-zinc-950 border border-zinc-800 rounded-xl p-3 flex items-center justify-between font-mono text-left shrink-0">
+                    <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-extrabold">ASR DECODER</span>
+                    <span className="text-[11px] text-zinc-400">READY FOR VOICE INPUT</span>
                   </div>
                 )}
 
@@ -788,9 +788,9 @@ export default function App() {
                     }}
                   >
                     <div className="flex items-center justify-between border-b border-zinc-800/50 pb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-white text-sm font-mono">{transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}</span>
-                        <span className="text-[10px] text-zinc-500 font-mono">{transcriptWords[selectedWordIndex].ipa}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-white text-base font-sans">{transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}</span>
+                        <span className="text-[12px] text-zinc-350 font-mono bg-zinc-900 px-1.5 py-0.5 rounded">{transcriptWords[selectedWordIndex].ipa}</span>
                       </div>
                       <button 
                         onClick={(e) => {
@@ -799,12 +799,12 @@ export default function App() {
                           setPopoverPosition(null);
                           setPopoverCardId(null);
                         }}
-                        className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
+                        className="p-1 rounded-full hover:bg-zinc-805 text-zinc-400 hover:text-white cursor-pointer"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="bg-[#121214]/85 border border-zinc-850 rounded p-2 text-xs text-zinc-250 leading-relaxed font-light">
+                    <div className="bg-[#121214] border border-zinc-800 rounded p-3 text-[13px] text-zinc-100 leading-relaxed font-semibold">
                       {transcriptWords[selectedWordIndex].definition}
                     </div>
                     <button
@@ -984,42 +984,42 @@ export default function App() {
               
               {/* Left Column - Interactive drills & Coach tips (originally Step 4) */}
               <div className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]">
-                <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 shrink-0">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 03 / DIAGNOSTIC DRILLS</span>
-                    <h2 className="text-sm font-semibold text-zinc-300">Speech Diagnostic & Practice Hub</h2>
+                <div className="flex items-center justify-between border-b border-zinc-800/60 pb-4 shrink-0">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] tracking-[0.2em] text-[#10b981] font-extrabold uppercase font-mono">STEP 03 / DIAGNOSTIC DRILLS</span>
+                    <h2 className="text-base font-bold text-zinc-100">Speech Diagnostic & Practice Hub</h2>
                   </div>
-                  <div className="flex items-center gap-1 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-850 text-[10px] text-zinc-500 font-mono">
+                  <div className="flex items-center gap-1.5 bg-zinc-950 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-[11px] text-zinc-300 font-mono">
                     COACH ONLINE
                   </div>
                 </div>
 
                 {/* Diagnostic coaches report */}
-                <div className="bg-[#fbbf24]/5 border border-[#fbbf24]/10 rounded-xl p-4 flex items-start gap-3 text-left shrink-0">
-                  <Sparkles className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-1 text-xs">
-                    <span className="font-semibold text-white">AI Coach Diagnostic Summary</span>
-                    <p className="text-zinc-400 leading-relaxed text-[11px]">
-                      "Practice combining final consonants with initial vowels. Try linking the final <strong className="text-white">/k/</strong> sound in <strong className="text-amber-400">'agentic'</strong> directly into the <strong className="text-white">/w/</strong> of <strong className="text-amber-400">'workflows'</strong>."
+                <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/20 rounded-xl p-4 flex items-start gap-3 text-left shrink-0">
+                  <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="flex flex-col gap-1.5 text-sm">
+                    <span className="font-bold text-white text-[13px]">AI Coach Diagnostic Summary</span>
+                    <p className="text-zinc-200 leading-relaxed text-[12px] font-medium">
+                      "Practice combining final consonants with initial vowels. Try linking the final <strong className="text-white">/k/</strong> sound in <strong className="text-amber-400 font-bold">'agentic'</strong> directly into the <strong className="text-white">/w/</strong> of <strong className="text-amber-400 font-bold">'workflows'</strong>."
                     </p>
                   </div>
                 </div>
 
-                {/* Highlighted text mapping for lookup drills */}
-                <div className="flex-1 py-1 overflow-y-auto no-scrollbar select-text text-left leading-[2.6rem] tracking-wide text-[17px] font-sans font-light text-zinc-455">
+                {/* Highlighted text mapping for lookup drills (Duolingo-inspired size, weight, and contrast) */}
+                <div className="flex-1 py-1 overflow-y-auto no-scrollbar select-text text-left leading-[3.0rem] tracking-wide text-[21px] font-sans font-bold text-zinc-200">
                   {transcriptWords.map((item, idx) => {
                     const isSelected = selectedWordIndex === idx;
                     
-                    let highlightClass = "text-zinc-400 hover:bg-zinc-800/40 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-300";
+                    let highlightClass = "text-zinc-300 hover:text-white hover:bg-[#27272a] hover:scale-105 hover:-translate-y-0.5 px-2 py-0.5 rounded cursor-pointer transition-all duration-350 ease-out transform inline-block";
                     let underlineClass = "";
                     
                     if (item.accuracy === 'good') {
-                      highlightClass = "text-[#34d399] bg-[#10b981]/5 px-1.5 py-0.5 rounded cursor-pointer border-b border-[#10b981]/20 transition-all duration-300";
+                      highlightClass = "text-[#58cc02] bg-[#58cc02]/15 px-2 py-0.5 rounded cursor-pointer border-b-2 border-[#58cc02] font-black transition-all duration-300 inline-block";
                     } else if (item.accuracy === 'average') {
-                      highlightClass = "text-[#fbbf24] bg-[#fbbf24]/5 px-1.5 py-0.5 rounded cursor-pointer border-b border-dashed border-[#fbbf24]/30 pulse-correction transition-all duration-300";
+                      highlightClass = "text-[#ff9600] bg-[#ff9600]/15 px-2 py-0.5 rounded cursor-pointer border-b-2 border-dashed border-[#ff9600] font-black transition-all duration-300 inline-block";
                       underlineClass = "pb-0.5";
                     } else if (item.accuracy === 'poor') {
-                      highlightClass = "text-[#ef4444] bg-[#ef4444]/5 px-1.5 py-0.5 rounded cursor-pointer underline decoration-wavy decoration-[#ef4444]/50 underline-offset-4 border border-[#ef4444]/10 transition-all duration-300";
+                      highlightClass = "text-[#ea2b2b] bg-[#ea2b2b]/15 px-2 py-0.5 rounded cursor-pointer border-b-2 border-[#ea2b2b] font-black transition-all duration-300 inline-block";
                       underlineClass = "pb-0.5";
                     }
 
@@ -1067,19 +1067,19 @@ export default function App() {
                       popoverDirection === 'top' 
                         ? 'animate-spring-in-above' 
                         : 'animate-spring-in-below'
-                    } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5 text-left`}
+                    } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5 text-left`}
                     style={{
                       left: `${popoverPosition.left}px`,
                       top: popoverDirection === 'top' ? `${popoverPosition.top - 12}px` : `${popoverPosition.top + popoverPosition.height + 12}px`,
                     }}
                   >
                     {/* Popover Header */}
-                    <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-white text-base font-mono">
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-white text-base font-sans">
                           {transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}
                         </span>
-                        <span className="text-[10px] text-zinc-500 font-mono">
+                        <span className="text-[12px] text-zinc-350 font-mono bg-zinc-900 px-1.5 py-0.5 rounded">
                           {transcriptWords[selectedWordIndex].ipa}
                         </span>
                       </div>
@@ -1090,28 +1090,28 @@ export default function App() {
                           setPopoverPosition(null);
                           setPopoverCardId(null);
                         }}
-                        className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
+                        className="p-1 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
 
                     {/* Dictionary translation */}
-                    <div className="bg-[#121214]/80 border border-zinc-800/60 rounded-lg p-2.5 flex flex-col gap-1 text-left">
-                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Translation</span>
-                      <span className="text-xs text-zinc-200 leading-normal font-normal">
+                    <div className="bg-[#121214] border border-zinc-800 rounded-lg p-3 flex flex-col gap-1.5 text-left">
+                      <span className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 font-extrabold font-mono">Translation</span>
+                      <span className="text-[13px] text-zinc-100 leading-relaxed font-semibold">
                         {transcriptWords[selectedWordIndex].definition}
                       </span>
                     </div>
 
                     {/* Interactive Wave Comparison */}
                     {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') && (
-                      <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
-                        <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono font-sans">Pitch Contour Comparison</span>
+                      <div className="flex flex-col gap-2.5 bg-[#121214] border border-zinc-800 rounded-lg p-3">
+                        <span className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 font-extrabold font-mono">Pitch Contour Comparison</span>
                         
                         {/* Native Waveform */}
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
+                          <span className="text-[10px] text-zinc-400 font-mono font-bold w-12 shrink-0">Native:</span>
                           <div className="flex-1 h-6 flex items-center relative overflow-hidden">
                             <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
                               <path 
@@ -1128,7 +1128,7 @@ export default function App() {
                               e.stopPropagation();
                               playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'native');
                             }}
-                            className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                            className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
                           >
                             <Play className="w-3 h-3 fill-current" />
                           </button>
@@ -1136,7 +1136,7 @@ export default function App() {
 
                         {/* User Waveform */}
                         <div className="flex items-center gap-2">
-                          <span className={`text-[9px] ${transcriptWords[selectedWordIndex].type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono w-10 shrink-0`}>You:</span>
+                          <span className={`text-[10px] ${transcriptWords[selectedWordIndex].type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono font-bold w-12 shrink-0`}>You:</span>
                           <div className="flex-1 h-6 flex items-center relative overflow-hidden">
                             <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
                               {transcriptWords[selectedWordIndex].type === 'liaison' ? (
@@ -1168,7 +1168,7 @@ export default function App() {
                               e.stopPropagation();
                               playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'user');
                             }}
-                            className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                            className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
                           >
                             <Play className="w-3 h-3 fill-current" />
                           </button>
@@ -1177,8 +1177,8 @@ export default function App() {
                     )}
 
                     {/* AI Tip Box */}
-                    <div className="bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-[11px] text-zinc-400 leading-relaxed">
-                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono block mb-1">AI Speech Coach Tip</span>
+                    <div className="bg-[#121214] border border-zinc-800 rounded-lg p-3 text-[12px] text-zinc-200 leading-relaxed">
+                      <span className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 font-extrabold font-mono block mb-1.5">AI Speech Coach Tip</span>
                       {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') 
                         ? transcriptWords[selectedWordIndex].tip 
                         : "Focus on maintaining clean vocal articulation during connected speech."}
@@ -1311,19 +1311,19 @@ export default function App() {
                       popoverDirection === 'top' 
                         ? 'animate-spring-in-above' 
                         : 'animate-spring-in-below'
-                    } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5 text-left`}
+                    } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5 text-left`}
                     style={{
                       left: `${popoverPosition.left}px`,
                       top: popoverDirection === 'top' ? `${popoverPosition.top - 12}px` : `${popoverPosition.top + popoverPosition.height + 12}px`,
                     }}
                   >
                     {/* Popover Header */}
-                    <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-white text-base font-mono">
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-white text-base font-sans">
                           {transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}
                         </span>
-                        <span className="text-[10px] text-zinc-500 font-mono">
+                        <span className="text-[12px] text-zinc-350 font-mono bg-zinc-900 px-1.5 py-0.5 rounded">
                           {transcriptWords[selectedWordIndex].ipa}
                         </span>
                       </div>
@@ -1334,28 +1334,28 @@ export default function App() {
                           setPopoverPosition(null);
                           setPopoverCardId(null);
                         }}
-                        className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
+                        className="p-1 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
 
                     {/* Dictionary translation */}
-                    <div className="bg-[#121214]/80 border border-zinc-800/60 rounded-lg p-2.5 flex flex-col gap-1 text-left">
-                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Translation</span>
-                      <span className="text-xs text-zinc-200 leading-normal font-normal">
+                    <div className="bg-[#121214] border border-zinc-800 rounded-lg p-3 flex flex-col gap-1.5 text-left">
+                      <span className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 font-extrabold font-mono">Translation</span>
+                      <span className="text-[13px] text-zinc-100 leading-relaxed font-semibold">
                         {transcriptWords[selectedWordIndex].definition}
                       </span>
                     </div>
 
                     {/* Interactive Wave Comparison */}
                     {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') && (
-                      <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
-                        <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono font-sans">Pitch Contour Comparison</span>
+                      <div className="flex flex-col gap-2.5 bg-[#121214] border border-zinc-800 rounded-lg p-3">
+                        <span className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 font-extrabold font-mono">Pitch Contour Comparison</span>
                         
                         {/* Native Waveform */}
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
+                          <span className="text-[10px] text-zinc-400 font-mono font-bold w-12 shrink-0">Native:</span>
                           <div className="flex-1 h-6 flex items-center relative overflow-hidden">
                             <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
                               <path 
@@ -1372,7 +1372,7 @@ export default function App() {
                               e.stopPropagation();
                               playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'native');
                             }}
-                            className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                            className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
                           >
                             <Play className="w-3 h-3 fill-current" />
                           </button>
@@ -1380,7 +1380,7 @@ export default function App() {
 
                         {/* User Waveform */}
                         <div className="flex items-center gap-2">
-                          <span className={`text-[9px] ${transcriptWords[selectedWordIndex].type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono w-10 shrink-0`}>You:</span>
+                          <span className={`text-[10px] ${transcriptWords[selectedWordIndex].type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono font-bold w-12 shrink-0`}>You:</span>
                           <div className="flex-1 h-6 flex items-center relative overflow-hidden">
                             <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
                               {transcriptWords[selectedWordIndex].type === 'liaison' ? (
@@ -1412,7 +1412,7 @@ export default function App() {
                               e.stopPropagation();
                               playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'user');
                             }}
-                            className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                            className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
                           >
                             <Play className="w-3 h-3 fill-current" />
                           </button>
@@ -1421,8 +1421,8 @@ export default function App() {
                     )}
 
                     {/* AI Tip Box */}
-                    <div className="bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-[11px] text-zinc-400 leading-relaxed">
-                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono block mb-1">AI Speech Coach Tip</span>
+                    <div className="bg-[#121214] border border-zinc-800 rounded-lg p-3 text-[12px] text-zinc-200 leading-relaxed">
+                      <span className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 font-extrabold font-mono block mb-1.5">AI Speech Coach Tip</span>
                       {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') 
                         ? transcriptWords[selectedWordIndex].tip 
                         : "Focus on maintaining clean vocal articulation during connected speech."}
