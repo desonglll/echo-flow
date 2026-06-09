@@ -624,7 +624,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-[1400px] items-center relative">
               
               {/* Left Column - Transcript Material */}
-              <div className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]">
+              <div className="premium-card premium-card-emerald rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]">
                 <div className="flex items-center justify-between border-b border-zinc-800/60 pb-4 shrink-0">
                   <div className="flex flex-col gap-1">
                     {shadowState === 'recording' ? (
@@ -668,7 +668,7 @@ export default function App() {
                   </div>
 
                   {/* Words Paragraph (Duolingo-inspired size, spacing, and bold contrast) */}
-                  <div className="flex-1 leading-[3.3rem] tracking-wide text-[24px] font-sans font-bold text-zinc-100">
+                  <div className="flex-1 leading-[3.3rem] tracking-wide text-[24px] font-serif font-bold text-zinc-100">
                     {transcriptWords.map((item, idx) => {
                       const isSelected = selectedWordIndex === idx;
                       
@@ -825,149 +825,151 @@ export default function App() {
 
               {/* Right Column - Recording Visualizer Console (Slides in from the right edge) */}
               <div 
-                className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]"
                 style={{ 
                   transform: `translateX(${slideTranslateX}%)`,
                   transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
+                className="h-[450px]"
               >
-                
-                {/* Scanner laser overlay during analyzing state */}
-                {shadowState === 'analyzing' && <div className="animate-scan-laser" />}
-                
-                {/* Record Limit progress bar */}
-                {shadowState === 'recording' && (
-                  <div 
-                    className="absolute top-0 left-0 h-[3px] bg-gradient-to-r from-emerald-500 via-[#10b981] to-emerald-400 transition-all duration-100 ease-linear"
-                    style={{ width: `${recordLimitPercent}%` }}
-                  />
-                )}
-
-                <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 02 / SHADOW CAPTURE</span>
-                    <h2 className="text-sm font-semibold text-zinc-300">Acoustic Console</h2>
-                  </div>
-                  <div className="text-[10px] font-mono text-zinc-550 uppercase">
-                    Status: {shadowState.toUpperCase()}
-                  </div>
-                </div>
-
-                {/* Waveform graphic */}
-                <div className="h-[120px] w-full bg-zinc-950 border border-zinc-800/60 rounded-xl relative flex flex-col justify-end p-4 overflow-hidden">
+                <div className="premium-card premium-card-emerald rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-full">
                   
-                  {/* High precision oscilloscope alignment grid lines */}
-                  <div className="absolute inset-0 pointer-events-none opacity-20">
-                    <svg className="w-full h-full" viewBox="0 0 100 24">
-                      <line x1="0" y1="6" x2="100" y2="6" stroke="#27272a" strokeWidth="0.1" />
-                      <line x1="0" y1="12" x2="100" y2="12" stroke="#27272a" strokeWidth="0.15" />
-                      <line x1="0" y1="18" x2="100" y2="18" stroke="#27272a" strokeWidth="0.1" />
-                      <line x1="25" y1="0" x2="25" y2="24" stroke="#27272a" strokeWidth="0.1" />
-                      <line x1="50" y1="0" x2="50" y2="24" stroke="#27272a" strokeWidth="0.15" />
-                      <line x1="75" y1="0" x2="75" y2="24" stroke="#27272a" strokeWidth="0.1" />
-                    </svg>
-                  </div>
-
+                  {/* Scanner laser overlay during analyzing state */}
+                  {shadowState === 'analyzing' && <div className="animate-scan-laser" />}
+                  
+                  {/* Record Limit progress bar */}
                   {shadowState === 'recording' && (
-                    <div className="absolute top-3 right-3 bg-red-950/20 border border-red-500/30 text-red-400 font-mono text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full inline-block animate-ping" />
-                      <span>REC {recordingMillis.toFixed(1)}s</span>
-                    </div>
+                    <div 
+                      className="absolute top-0 left-0 h-[3px] bg-gradient-to-r from-emerald-500 via-[#10b981] to-emerald-400 transition-all duration-100 ease-linear"
+                      style={{ width: `${recordLimitPercent}%` }}
+                    />
                   )}
 
-                  <div className="w-full h-full relative flex items-end">
-                    {shadowState === 'ready' && (
-                      <svg className="w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
-                        <path d={nativeReferencePath} fill="none" stroke="#52525b" strokeWidth="1.5" strokeDasharray="3 2" />
+                  <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 02 / SHADOW CAPTURE</span>
+                      <h2 className="text-sm font-semibold text-zinc-300">Acoustic Console</h2>
+                    </div>
+                    <div className="text-[10px] font-mono text-zinc-550 uppercase">
+                      Status: {shadowState.toUpperCase()}
+                    </div>
+                  </div>
+
+                  {/* Waveform graphic */}
+                  <div className="h-[120px] w-full bg-zinc-950 border border-zinc-800/60 rounded-xl relative flex flex-col justify-end p-4 overflow-hidden">
+                    
+                    {/* High precision oscilloscope alignment grid lines */}
+                    <div className="absolute inset-0 pointer-events-none opacity-20">
+                      <svg className="w-full h-full" viewBox="0 0 100 24">
+                        <line x1="0" y1="6" x2="100" y2="6" stroke="#27272a" strokeWidth="0.1" />
+                        <line x1="0" y1="12" x2="100" y2="12" stroke="#27272a" strokeWidth="0.15" />
+                        <line x1="0" y1="18" x2="100" y2="18" stroke="#27272a" strokeWidth="0.1" />
+                        <line x1="25" y1="0" x2="25" y2="24" stroke="#27272a" strokeWidth="0.1" />
+                        <line x1="50" y1="0" x2="50" y2="24" stroke="#27272a" strokeWidth="0.15" />
+                        <line x1="75" y1="0" x2="75" y2="24" stroke="#27272a" strokeWidth="0.1" />
                       </svg>
-                    )}
+                    </div>
 
                     {shadowState === 'recording' && (
-                      <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="liquidGlowArena" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
-                            <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={`${getPathFromPoints(wavePoints)} L 100 24 L 0 24 Z`} fill="url(#liquidGlowArena)" />
-                        <path d={getPathFromPoints(wavePoints)} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
-                      </svg>
-                    )}
-
-                    {shadowState === 'analyzing' && (
-                      <div className="absolute inset-0 w-full h-full shimmer-wave opacity-50 flex items-center">
-                        <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                          <path d={nativeReferencePath} fill="none" stroke="#222226" strokeWidth="1.5" />
-                        </svg>
+                      <div className="absolute top-3 right-3 bg-red-950/20 border border-red-500/30 text-red-400 font-mono text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full inline-block animate-ping" />
+                        <span>REC {recordingMillis.toFixed(1)}s</span>
                       </div>
                     )}
-                    
-                    {shadowState === 'result' && (
-                      <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                        <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
 
-                {/* Recorder Control Dial Button */}
-                <div className="flex flex-col items-center gap-3">
-                  <div className="relative">
-                    {shadowState === 'recording' && (
-                      <div className="absolute -inset-4 rounded-full border border-emerald-500/10 ring-glow-active" />
-                    )}
-                    <button
-                      onClick={handleMainActionClick}
-                      className={`w-16 h-16 rounded-full flex flex-col items-center justify-center border transition-all duration-500 relative z-10 focus:outline-none cursor-pointer group ${
-                        shadowState === 'ready'
-                          ? 'bg-zinc-900 border-zinc-800/80 hover:border-emerald-500/40 text-zinc-400 hover:text-white shadow-lg'
-                          : shadowState === 'recording'
-                            ? 'bg-zinc-950 border-emerald-500 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
-                            : shadowState === 'analyzing'
-                              ? 'bg-zinc-950 border-zinc-850 text-zinc-650'
-                              : 'bg-zinc-900 border-emerald-500/50 text-[#10b981]'
-                      }`}
-                    >
+                    <div className="w-full h-full relative flex items-end">
                       {shadowState === 'ready' && (
-                        <>
-                          <Mic className="w-5 h-5 text-zinc-400 group-hover:text-white" />
-                          <span className="text-[7px] font-mono tracking-wider text-zinc-500 mt-0.5 uppercase font-bold">SPACE</span>
-                        </>
+                        <svg className="w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
+                          <path d={nativeReferencePath} fill="none" stroke="#52525b" strokeWidth="1.5" strokeDasharray="3 2" />
+                        </svg>
                       )}
+
                       {shadowState === 'recording' && (
-                        <>
-                          <div className="w-2.5 h-2.5 bg-emerald-400 rounded-sm animate-pulse" />
-                          <span className="text-[7px] font-mono tracking-wider text-emerald-400 mt-0.5 uppercase font-bold">STOP</span>
-                        </>
+                        <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                          <defs>
+                            <linearGradient id="liquidGlowArena" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+                              <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+                          <path d={`${getPathFromPoints(wavePoints)} L 100 24 L 0 24 Z`} fill="url(#liquidGlowArena)" />
+                          <path d={getPathFromPoints(wavePoints)} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
+                        </svg>
                       )}
+
                       {shadowState === 'analyzing' && (
-                        <span className="text-[10px] font-mono text-[#10b981] font-bold">{analyzingProgress}%</span>
+                        <div className="absolute inset-0 w-full h-full shimmer-wave opacity-50 flex items-center">
+                          <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                            <path d={nativeReferencePath} fill="none" stroke="#222226" strokeWidth="1.5" />
+                          </svg>
+                        </div>
                       )}
+                      
                       {shadowState === 'result' && (
-                        <>
-                          <RotateCcw className="w-5 h-5" />
-                          <span className="text-[7px] font-mono tracking-wider text-emerald-400 mt-0.5 uppercase font-bold">RETRY</span>
-                        </>
+                        <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                          <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
+                        </svg>
                       )}
-                    </button>
-                  </div>
-
-                  <div className="flex flex-col items-center text-center">
-                    <span className="text-xs font-semibold text-zinc-350">
-                      {shadowState === 'ready' && "Click or Press Spacebar to Record"}
-                      {shadowState === 'recording' && "Capturing Speech Signal..."}
-                      {shadowState === 'analyzing' && analyzingMessage}
-                      {shadowState === 'result' && "Voice Captured Successfully"}
-                    </span>
-                  </div>
-
-                  {/* Pulsing prompt to continue scrolling after recording complete */}
-                  {shadowState === 'result' && (
-                    <div className="mt-2 bg-[#10b981]/5 border border-[#10b981]/20 rounded-lg py-2 px-3 text-[10px] text-[#10b981] font-semibold animate-pulse">
-                      Scroll down to view detailed AI diagnostics & connected speech matching!
                     </div>
-                  )}
+                  </div>
+
+                  {/* Recorder Control Dial Button */}
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="relative">
+                      {shadowState === 'recording' && (
+                        <div className="absolute -inset-4 rounded-full border border-emerald-500/10 ring-glow-active" />
+                      )}
+                      <button
+                        onClick={handleMainActionClick}
+                        className={`w-16 h-16 rounded-full flex flex-col items-center justify-center border transition-all duration-500 relative z-10 focus:outline-none cursor-pointer group ${
+                          shadowState === 'ready'
+                            ? 'bg-zinc-900 border-zinc-800/80 hover:border-emerald-500/40 text-zinc-400 hover:text-white shadow-lg'
+                            : shadowState === 'recording'
+                              ? 'bg-zinc-950 border-emerald-500 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
+                              : shadowState === 'analyzing'
+                                ? 'bg-zinc-950 border-zinc-850 text-zinc-650'
+                                : 'bg-zinc-900 border-emerald-500/50 text-[#10b981]'
+                        }`}
+                      >
+                        {shadowState === 'ready' && (
+                          <>
+                            <Mic className="w-5 h-5 text-zinc-400 group-hover:text-white" />
+                            <span className="text-[7px] font-mono tracking-wider text-zinc-500 mt-0.5 uppercase font-bold">SPACE</span>
+                          </>
+                        )}
+                        {shadowState === 'recording' && (
+                          <>
+                            <div className="w-2.5 h-2.5 bg-emerald-400 rounded-sm animate-pulse" />
+                            <span className="text-[7px] font-mono tracking-wider text-emerald-400 mt-0.5 uppercase font-bold">STOP</span>
+                          </>
+                        )}
+                        {shadowState === 'analyzing' && (
+                          <span className="text-[10px] font-mono text-[#10b981] font-bold">{analyzingProgress}%</span>
+                        )}
+                        {shadowState === 'result' && (
+                          <>
+                            <RotateCcw className="w-5 h-5" />
+                            <span className="text-[7px] font-mono tracking-wider text-emerald-400 mt-0.5 uppercase font-bold">RETRY</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col items-center text-center">
+                      <span className="text-xs font-semibold text-zinc-350">
+                        {shadowState === 'ready' && "Click or Press Spacebar to Record"}
+                        {shadowState === 'recording' && "Capturing Speech Signal..."}
+                        {shadowState === 'analyzing' && analyzingMessage}
+                        {shadowState === 'result' && "Voice Captured Successfully"}
+                      </span>
+                    </div>
+
+                    {/* Pulsing prompt to continue scrolling after recording complete */}
+                    {shadowState === 'result' && (
+                      <div className="mt-2 bg-[#10b981]/5 border border-[#10b981]/20 rounded-lg py-2 px-3 text-[10px] text-[#10b981] font-semibold animate-pulse">
+                        Scroll down to view detailed AI diagnostics & connected speech matching!
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -983,7 +985,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-[1400px] items-center relative">
               
               {/* Left Column - Interactive drills & Coach tips (originally Step 4) */}
-              <div className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]">
+              <div className="premium-card premium-card-amber rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]">
                 <div className="flex items-center justify-between border-b border-zinc-800/60 pb-4 shrink-0">
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] tracking-[0.2em] text-[#10b981] font-extrabold uppercase font-mono">STEP 03 / DIAGNOSTIC DRILLS</span>
@@ -1006,7 +1008,7 @@ export default function App() {
                 </div>
 
                 {/* Highlighted text mapping for lookup drills (Duolingo-inspired size, weight, and contrast) */}
-                <div className="flex-1 py-1 overflow-y-auto no-scrollbar select-text text-left leading-[3.0rem] tracking-wide text-[21px] font-sans font-bold text-zinc-200">
+                <div className="flex-1 py-1 overflow-y-auto no-scrollbar select-text text-left leading-[3.0rem] tracking-wide text-[21px] font-serif font-bold text-zinc-200">
                   {transcriptWords.map((item, idx) => {
                     const isSelected = selectedWordIndex === idx;
                     
@@ -1189,12 +1191,13 @@ export default function App() {
 
               {/* Right Column - Amplitude overlays & Scores (originally Step 3) */}
               <div 
-                className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]"
                 style={{ 
                   transform: `translateX(${diagnosticSlideX}%)`,
                   transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
+                className="h-[450px]"
               >
+                <div className="premium-card premium-card-emerald rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-full">
                 <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 shrink-0">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 04 / COMPARISON RESULTS</span>
@@ -1429,6 +1432,7 @@ export default function App() {
                     </div>
                   </div>
                 )}
+                </div>
               </div>
 
             </div>
