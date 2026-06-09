@@ -74,12 +74,13 @@ export default function App() {
   // Scrollytelling active state tracker
   const [activeSection, setActiveSection] = useState<number>(0);
   const [arenaProgress, setArenaProgress] = useState<number>(0);
+  const [diagnosticsProgress, setDiagnosticsProgress] = useState<number>(0);
   
   // Application State
   const [shadowState, setShadowState] = useState<'ready' | 'recording' | 'analyzing' | 'result'>('ready');
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
   const [popoverDirection, setPopoverDirection] = useState<'top' | 'bottom'>('top');
-  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null);
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number; height: number } | null>(null);
   
   // Mouse Follower Coordinates
   const [mousePos, setMousePos] = useState({ x: -450, y: -450 });
@@ -141,7 +142,7 @@ export default function App() {
         // If the word is high up, show popover below it, otherwise show above
         const showBelow = relativeTop < 170;
         setPopoverDirection(showBelow ? 'bottom' : 'top');
-        setPopoverPosition({ top: relativeTop, left: relativeLeft });
+        setPopoverPosition({ top: relativeTop, left: relativeLeft, height: buttonRect.height });
         setSelectedWordIndex(index);
       }
     }
@@ -159,10 +160,8 @@ export default function App() {
         index = 0;
       } else if (scrollTop < 3 * height) {
         index = 1;
-      } else if (scrollTop < 4 * height) {
-        index = 2;
       } else {
-        index = 3;
+        index = 2;
       }
       setActiveSection(index);
       
@@ -172,6 +171,14 @@ export default function App() {
         setArenaProgress(progress);
       } else {
         setArenaProgress(0);
+      }
+      
+      // Calculate scroll progress specifically within the 200vh Diagnostics track
+      if (scrollTop >= 3 * height && scrollTop < 5 * height) {
+        const progress = (scrollTop - 3 * height) / (2 * height);
+        setDiagnosticsProgress(progress);
+      } else {
+        setDiagnosticsProgress(0);
       }
     };
 
@@ -425,6 +432,10 @@ export default function App() {
     ? Math.max(0, (0.45 - arenaProgress) / 0.45 * 125)
     : activeSection > 1 ? 0 : 125;
 
+  const diagnosticSlideX = activeSection === 2
+    ? Math.max(0, (0.45 - diagnosticsProgress) / 0.45 * 125)
+    : activeSection > 2 ? 0 : 125;
+
   const hasFinishedRecording = shadowState === 'result';
 
   return (
@@ -470,8 +481,7 @@ export default function App() {
             {[
               { label: "1. Acoustic Intro", section: 0, scrollTop: 0, show: true },
               { label: "2. Practice Arena", section: 1, scrollTop: 1, show: true },
-              { label: "3. Liaison Mapping", section: 2, scrollTop: 3, show: hasFinishedRecording },
-              { label: "4. Speech Diagnosis", section: 3, scrollTop: 4, show: hasFinishedRecording }
+              { label: "3. AI Diagnostics", section: 2, scrollTop: 3, show: hasFinishedRecording }
             ].map((item, idx) => {
               if (!item.show) return null;
               return (
@@ -521,8 +531,7 @@ export default function App() {
         {[
           { label: 'Intro', scrollTop: 0, section: 0, show: true },
           { label: 'Arena', scrollTop: 1, section: 1, show: true },
-          { label: 'Analysis', scrollTop: 3, section: 2, show: hasFinishedRecording },
-          { label: 'Diagnostic', scrollTop: 4, section: 3, show: hasFinishedRecording }
+          { label: 'Diagnostics', scrollTop: 3, section: 2, show: hasFinishedRecording }
         ].map((item, idx) => {
           if (!item.show) return null;
           return (
@@ -616,7 +625,7 @@ export default function App() {
                 </div>
 
                 {/* Podcast Timed Transcript Layout */}
-                <div className="flex-1 py-2 overflow-y-auto flex items-start gap-4 pr-2 select-text">
+                <div className="flex-1 py-2 overflow-y-auto no-scrollbar flex items-start gap-4 pr-2 select-text">
                   
                   {/* Podcasting Line Timestamps */}
                   <div className="flex flex-col gap-8 text-[9px] font-mono text-zinc-600 w-10 pt-1 shrink-0 border-r border-zinc-800/40 pr-2.5">
@@ -744,7 +753,7 @@ export default function App() {
                     } z-50 w-[270px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-2xl flex flex-col gap-3 text-left`}
                     style={{
                       left: `${popoverPosition.left}px`,
-                      top: popoverDirection === 'top' ? `${popoverPosition.top - 8}px` : `${popoverPosition.top + 28}px`,
+                      top: popoverDirection === 'top' ? `${popoverPosition.top - 12}px` : `${popoverPosition.top + popoverPosition.height + 12}px`,
                     }}
                   >
                     <div className="flex items-center justify-between border-b border-zinc-800/50 pb-1.5">
@@ -920,336 +929,463 @@ export default function App() {
 
                   {/* Pulsing prompt to continue scrolling after recording complete */}
                   {shadowState === 'result' && (
-                    <div className="mt-2 bg-[#10b981]/5 border border-[#10b981]/20 rounded-lg py-2 px-3 text-[10px] text-[#10b981] font-semibold flex items-center gap-1.5 animate-bounce shadow-md">
-                      <Sparkles className="w-3.5 h-3.5 text-[#10b981] animate-pulse" />
-                      <span>Recording complete. Scroll down for AI results!</span>
+                    <div className="mt-2 bg-[#10b981]/5 border border-[#10b981]/20 rounded-lg py-2 px-3 text-[10px] text-[#10b981] font-semibold animate-pulse">
+                      Scroll down to view detailed AI diagnostics & connected speech matching!
                     </div>
                   )}
                 </div>
-
               </div>
-
             </div>
-
           </div>
         </div>
 
-        {/* SECTION 4: Rhythmic Alignment Analysis (Comparison Wave & Score counts, scroll offset 300vh) */}
+        {/* SECTION 4: AI Feedback Hub (Combined Liaison Mapping & Speech Diagnosis, scroll offset 300vh) */}
         {hasFinishedRecording && (
-          <section className="h-screen w-full flex items-center justify-center p-8 border-b border-[#222226]/20 relative">
-            <div className="max-w-[800px] w-full flex flex-col gap-6 premium-card rounded-2xl p-8 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 03 / COMPARISON RESULTS</span>
-                  <h2 className="text-sm font-semibold text-zinc-300">Continuous Amplitude Overlays</h2>
+          <div className="h-[200vh] relative w-full border-b border-[#222226]/20">
+            <div className="sticky top-0 h-screen w-full flex items-center justify-center px-12 overflow-hidden">
+            
+            {/* Grid Container for Left and Right Panels */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-[1400px] items-center relative">
+              
+              {/* Left Column - Interactive drills & Coach tips (originally Step 4) */}
+              <div className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]">
+                <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 shrink-0">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 03 / DIAGNOSTIC DRILLS</span>
+                    <h2 className="text-sm font-semibold text-zinc-300">Speech Diagnostic & Practice Hub</h2>
+                  </div>
+                  <div className="flex items-center gap-1 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-850 text-[10px] text-zinc-500 font-mono">
+                    COACH ONLINE
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 bg-[#10b981]/5 border border-[#10b981]/25 rounded-full px-2.5 py-0.5 text-[10px] text-[#10b981] font-semibold font-mono">
-                  OVERALL MATCH: {scoreCount}%
+
+                {/* Diagnostic coaches report */}
+                <div className="bg-[#fbbf24]/5 border border-[#fbbf24]/10 rounded-xl p-4 flex items-start gap-3 text-left shrink-0">
+                  <Sparkles className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="flex flex-col gap-1 text-xs">
+                    <span className="font-semibold text-white">AI Coach Diagnostic Summary</span>
+                    <p className="text-zinc-400 leading-relaxed text-[11px]">
+                      "Practice combining final consonants with initial vowels. Try linking the final <strong className="text-white">/k/</strong> sound in <strong className="text-amber-400">'agentic'</strong> directly into the <strong className="text-white">/w/</strong> of <strong className="text-amber-400">'workflows'</strong>."
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Overlapping wave box */}
-              <div className="h-[150px] w-full bg-zinc-950 border border-zinc-800/60 rounded-xl relative flex flex-col justify-end p-4 overflow-hidden">
-                <div className="absolute top-3 left-3 flex flex-col gap-0.5 text-[9px] font-mono text-zinc-500">
-                  <span className="text-zinc-650">Grey Dashed = Native reference</span>
-                  <span className="text-[#10b981]">Green Solid = Your voice spectrum</span>
-                </div>
-
-                <div className="w-full h-full relative flex items-end">
-                  <svg className="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
-                    <path d={nativeReferencePath} fill="none" stroke="#66666f" strokeWidth="1.5" strokeDasharray="3 1.5" />
-                  </svg>
-
-                  <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="userResultGlowScrolly" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={`${userResultPath} L 100 24 L 0 24 Z`} fill="url(#userResultGlowScrolly)" />
-                    <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" />
+                {/* Highlighted text mapping for lookup drills */}
+                <div className="flex-1 py-1 overflow-y-auto no-scrollbar select-text text-left leading-[2.6rem] tracking-wide text-[17px] font-sans font-light text-zinc-455">
+                  {transcriptWords.map((item, idx) => {
+                    const isSelected = selectedWordIndex === idx;
                     
-                    {/* Highlight correction sections */}
-                    <path d="M 34 12 L 42 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" />
-                    <path d="M 72 12 L 78 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" />
-                  </svg>
-
-                  {/* Hotspot overlays */}
-                  <button 
-                    onClick={() => {
-                      setSelectedWordIndex(5);
-                      playWordAudio(transcriptWords[5], 5, 'native');
-                    }}
-                    className="absolute bottom-0 left-[34%] w-[8%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
-                  >
-                    <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 1</span>
-                  </button>
-
-                  <button 
-                    onClick={() => {
-                      setSelectedWordIndex(10);
-                      playWordAudio(transcriptWords[10], 10, 'native');
-                    }}
-                    className="absolute bottom-0 left-[72%] w-[6%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
-                  >
-                    <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 2</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Score slide-out bars */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left">
-                  <div className="flex justify-between items-center text-[10px] font-mono">
-                    <span className="text-zinc-550 uppercase">Pronunciation</span>
-                    <span className="text-white font-bold">94%</span>
-                  </div>
-                  <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
-                    <div 
-                      className="bg-[#10b981] h-full rounded-full transition-all duration-1000 ease-out" 
-                      style={{ width: metricsVisible ? '94%' : '0%' }}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left">
-                  <div className="flex justify-between items-center text-[10px] font-mono">
-                    <span className="text-amber-500 uppercase">Liaison (Flow)</span>
-                    <span className="text-amber-500 font-bold">89%</span>
-                  </div>
-                  <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
-                    <div 
-                      className="bg-[#fbbf24] h-full rounded-full transition-all duration-1000 ease-out" 
-                      style={{ width: metricsVisible ? '89%' : '0%' }}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left">
-                  <div className="flex justify-between items-center text-[10px] font-mono">
-                    <span className="text-zinc-555 uppercase">Intonation</span>
-                    <span className="text-white font-bold">91%</span>
-                  </div>
-                  <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
-                    <div 
-                      className="bg-[#10b981] h-full rounded-full transition-all duration-1000 ease-out" 
-                      style={{ width: metricsVisible ? '91%' : '0%' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* SECTION 5: AI Coach Diagnostic (Mouth tips, popover lookup explorations) */}
-        {hasFinishedRecording && (
-          <section className="h-screen w-full flex items-center justify-center p-8 relative">
-            <div className="max-w-[800px] w-full flex flex-col gap-6 premium-card rounded-2xl p-8 shadow-2xl relative">
-              <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 04 / INTERACTIVE DRILLS</span>
-                  <h2 className="text-sm font-semibold text-zinc-350">Speech Diagnostic & Practice Hub</h2>
-                </div>
-                <div className="flex items-center gap-1 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-850 text-[10px] text-zinc-500 font-mono">
-                  COACH ONLINE
-                </div>
-              </div>
-
-              {/* Diagnostic coaches report */}
-              <div className="bg-[#fbbf24]/5 border border-[#fbbf24]/10 rounded-xl p-4 flex items-start gap-3 text-left">
-                <Sparkles className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                <div className="flex flex-col gap-1 text-xs">
-                  <span className="font-semibold text-white">AI Coach Diagnostic Summary</span>
-                  <p className="text-zinc-400 leading-relaxed">
-                    "Practice combining final consonants with initial vowels. Try linking the final <strong className="text-white">/k/</strong> sound in <strong className="text-amber-400">'agentic'</strong> directly into the <strong className="text-white">/w/</strong> of <strong className="text-amber-400">'workflows'</strong>. Scroll back up to the Arena to practice this liaison directly."
-                  </p>
-                </div>
-              </div>
-
-              {/* Highlighted text mapping for lookup drills */}
-              <div className="bg-zinc-950/40 border border-zinc-850 rounded-xl p-5 text-left leading-[2.5rem] tracking-wide text-lg text-zinc-455 font-sans font-light">
-                {transcriptWords.map((item, idx) => {
-                  const isSelected = selectedWordIndex === idx;
-                  
-                  let highlightClass = "text-zinc-400 hover:bg-zinc-800/40 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-300";
-                  let underlineClass = "";
-                  
-                  if (item.accuracy === 'good') {
-                    highlightClass = "text-[#34d399] bg-[#10b981]/5 px-1.5 py-0.5 rounded cursor-pointer border-b border-[#10b981]/20 transition-all duration-300";
-                  } else if (item.accuracy === 'average') {
-                    highlightClass = "text-[#fbbf24] bg-[#fbbf24]/5 px-1.5 py-0.5 rounded cursor-pointer border-b border-dashed border-[#fbbf24]/30 pulse-correction transition-all duration-300";
-                    underlineClass = "pb-0.5";
-                  } else if (item.accuracy === 'poor') {
-                    highlightClass = "text-[#ef4444] bg-[#ef4444]/5 px-1.5 py-0.5 rounded cursor-pointer underline decoration-wavy decoration-[#ef4444]/50 underline-offset-4 border border-[#ef4444]/10 transition-all duration-300";
-                    underlineClass = "pb-0.5";
-                  }
-
-                  if (isSelected) {
-                    if (item.type === 'liaison') {
-                      highlightClass += " ring-2 ring-[#fbbf24]/50 bg-[#fbbf24]/10 shadow-[0_0_12px_rgba(251,191,36,0.15)]";
-                    } else if (item.type === 'flat') {
-                      highlightClass += " ring-2 ring-[#ef4444]/50 bg-[#ef4444]/10 shadow-[0_0_12px_rgba(239,68,68,0.15)] text-white";
-                    } else {
-                      highlightClass += " ring-2 ring-zinc-750 bg-zinc-850 shadow-[0_0_10px_rgba(255,255,255,0.04)] text-white";
+                    let highlightClass = "text-zinc-400 hover:bg-zinc-800/40 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-300";
+                    let underlineClass = "";
+                    
+                    if (item.accuracy === 'good') {
+                      highlightClass = "text-[#34d399] bg-[#10b981]/5 px-1.5 py-0.5 rounded cursor-pointer border-b border-[#10b981]/20 transition-all duration-300";
+                    } else if (item.accuracy === 'average') {
+                      highlightClass = "text-[#fbbf24] bg-[#fbbf24]/5 px-1.5 py-0.5 rounded cursor-pointer border-b border-dashed border-[#fbbf24]/30 pulse-correction transition-all duration-300";
+                      underlineClass = "pb-0.5";
+                    } else if (item.accuracy === 'poor') {
+                      highlightClass = "text-[#ef4444] bg-[#ef4444]/5 px-1.5 py-0.5 rounded cursor-pointer underline decoration-wavy decoration-[#ef4444]/50 underline-offset-4 border border-[#ef4444]/10 transition-all duration-300";
+                      underlineClass = "pb-0.5";
                     }
-                  }
 
-                  return (
-                    <span key={idx} className="relative inline-block mx-0.5">
-                      <button
-                        onClick={(e) => {
-                          if (item.type === 'liaison' || item.type === 'flat' || isSelected) {
-                            handleWordClick(e, item, idx);
-                          } else {
-                            playWordAudio(item, idx, 'native');
-                          }
-                        }}
-                        className={`${highlightClass} ${underlineClass} focus:outline-none`}
-                      >
-                        {item.text}
-                      </button>
+                    if (isSelected) {
+                      if (item.type === 'liaison') {
+                        highlightClass += " ring-2 ring-[#fbbf24]/50 bg-[#fbbf24]/10 shadow-[0_0_12px_rgba(251,191,36,0.15)]";
+                      } else if (item.type === 'flat') {
+                        highlightClass += " ring-2 ring-[#ef4444]/50 bg-[#ef4444]/10 shadow-[0_0_12px_rgba(239,68,68,0.15)] text-white";
+                      } else {
+                        highlightClass += " ring-2 ring-zinc-750 bg-zinc-850 shadow-[0_0_10px_rgba(255,255,255,0.04)] text-white";
+                      }
+                    }
 
-                      {/* Speech Wave Ripple Indicator */}
-                      {activeAudioWord === idx && (
-                        <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#10b981]"></span>
-                        </span>
-                      )}
-                    </span>
-                  );
-                })}
-              </div>
+                    return (
+                      <span key={idx} className="relative inline-block mx-0.5">
+                        <button
+                          onClick={(e) => {
+                            if (item.type === 'liaison' || item.type === 'flat' || isSelected) {
+                              handleWordClick(e, item, idx);
+                            } else {
+                              playWordAudio(item, idx, 'native');
+                            }
+                          }}
+                          className={`${highlightClass} ${underlineClass} focus:outline-none`}
+                        >
+                          {item.text}
+                        </button>
 
-              {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
-              {selectedWordIndex !== null && popoverPosition && activeSection === 3 && (
-                <div 
-                  className={`absolute ${
-                    popoverDirection === 'top' 
-                      ? 'animate-spring-in-above' 
-                      : 'animate-spring-in-below'
-                  } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5 text-left`}
-                  style={{
-                    left: `${popoverPosition.left}px`,
-                    top: popoverDirection === 'top' ? `${popoverPosition.top - 8}px` : `${popoverPosition.top + 28}px`,
-                  }}
-                >
-                  {/* Popover Header */}
-                  <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-white text-base font-mono">
-                        {transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}
+                        {/* Speech Wave Ripple Indicator */}
+                        {activeAudioWord === idx && (
+                          <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#10b981]"></span>
+                          </span>
+                        )}
                       </span>
-                      <span className="text-[10px] text-zinc-500 font-mono">
-                        {transcriptWords[selectedWordIndex].ipa}
+                    );
+                  })}
+                </div>
+
+                {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
+                {selectedWordIndex !== null && popoverPosition && activeSection === 2 && (
+                  <div 
+                    className={`absolute ${
+                      popoverDirection === 'top' 
+                        ? 'animate-spring-in-above' 
+                        : 'animate-spring-in-below'
+                    } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5 text-left`}
+                    style={{
+                      left: `${popoverPosition.left}px`,
+                      top: popoverDirection === 'top' ? `${popoverPosition.top - 12}px` : `${popoverPosition.top + popoverPosition.height + 12}px`,
+                    }}
+                  >
+                    {/* Popover Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-white text-base font-mono">
+                          {transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 font-mono">
+                          {transcriptWords[selectedWordIndex].ipa}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedWordIndex(null);
+                          setPopoverPosition(null);
+                        }}
+                        className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Dictionary translation */}
+                    <div className="bg-[#121214]/80 border border-zinc-800/60 rounded-lg p-2.5 flex flex-col gap-1 text-left">
+                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Translation</span>
+                      <span className="text-xs text-zinc-200 leading-normal font-normal">
+                        {transcriptWords[selectedWordIndex].definition}
                       </span>
                     </div>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedWordIndex(null);
-                        setPopoverPosition(null);
-                      }}
-                      className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
 
-                  {/* Dictionary translation */}
-                  <div className="bg-[#121214]/80 border border-zinc-800/60 rounded-lg p-2.5 flex flex-col gap-1 text-left">
-                    <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Translation</span>
-                    <span className="text-xs text-zinc-200 leading-normal font-normal">
-                      {transcriptWords[selectedWordIndex].definition}
-                    </span>
-                  </div>
-
-                  {/* Interactive Wave Comparison */}
-                  {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') && (
-                    <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
-                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono font-sans">Pitch Contour Comparison</span>
-                      
-                      {/* Native Waveform */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
-                        <div className="flex-1 h-6 flex items-center relative overflow-hidden">
-                          <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                            <path 
-                              d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
-                              fill="none" 
-                              stroke="#52525b" 
-                              strokeWidth="2.0" 
-                              strokeLinecap="round"
-                            />
-                          </svg>
+                    {/* Interactive Wave Comparison */}
+                    {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') && (
+                      <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
+                        <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono font-sans">Pitch Contour Comparison</span>
+                        
+                        {/* Native Waveform */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
+                          <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                            <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                              <path 
+                                d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
+                                fill="none" 
+                                stroke="#52525b" 
+                                strokeWidth="2.0" 
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </div>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'native');
+                            }}
+                            className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                          >
+                            <Play className="w-3 h-3 fill-current" />
+                          </button>
                         </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'native');
-                          }}
-                          className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
-                        >
-                          <Play className="w-3 h-3 fill-current" />
-                        </button>
-                      </div>
 
-                      {/* User Waveform */}
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[9px] ${transcriptWords[selectedWordIndex].type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono w-10 shrink-0`}>You:</span>
-                        <div className="flex-1 h-6 flex items-center relative overflow-hidden">
-                          <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                            {transcriptWords[selectedWordIndex].type === 'liaison' ? (
-                              <>
+                        {/* User Waveform */}
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[9px] ${transcriptWords[selectedWordIndex].type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono w-10 shrink-0`}>You:</span>
+                          <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                            <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                              {transcriptWords[selectedWordIndex].type === 'liaison' ? (
+                                <>
+                                  <path 
+                                    d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
+                                    fill="none" 
+                                    stroke="#f59e0b" 
+                                    strokeWidth="2.0" 
+                                    strokeDasharray="4 2.5"
+                                    strokeLinecap="round"
+                                  />
+                                  <circle cx="49" cy="12" r="2.5" fill="#ef4444" className="animate-ping" />
+                                </>
+                              ) : (
                                 <path 
-                                  d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
+                                  d="M0 12 C25 6, 50 18, 75 6 T100 12" 
                                   fill="none" 
-                                  stroke="#f59e0b" 
-                                  strokeWidth="2.0" 
-                                  strokeDasharray="4 2.5"
+                                  stroke="#ef4444" 
+                                  strokeWidth="1.8" 
+                                  strokeDasharray="3 2"
                                   strokeLinecap="round"
                                 />
-                                <circle cx="49" cy="12" r="2.5" fill="#ef4444" className="animate-ping" />
-                              </>
-                            ) : (
-                              <path 
-                                d="M0 12 C25 6, 50 18, 75 6 T100 12" 
-                                fill="none" 
-                                stroke="#ef4444" 
-                                strokeWidth="1.8" 
-                                strokeDasharray="3 2"
-                                  strokeLinecap="round"
-                              />
-                            )}
-                          </svg>
+                              )}
+                            </svg>
+                          </div>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'user');
+                            }}
+                            className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                          >
+                            <Play className="w-3 h-3 fill-current" />
+                          </button>
                         </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'user');
-                          }}
-                          className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
-                        >
-                          <Play className="w-3 h-3 fill-current" />
-                        </button>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* AI Tip Box */}
-                  <div className="bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-[11px] text-zinc-400 leading-relaxed">
-                    <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono block mb-1">AI Speech Coach Tip</span>
-                    {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') 
-                      ? transcriptWords[selectedWordIndex].tip 
-                      : "Focus on maintaining clean vocal articulation during connected speech."}
+                    {/* AI Tip Box */}
+                    <div className="bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-[11px] text-zinc-400 leading-relaxed">
+                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono block mb-1">AI Speech Coach Tip</span>
+                      {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') 
+                        ? transcriptWords[selectedWordIndex].tip 
+                        : "Focus on maintaining clean vocal articulation during connected speech."}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Amplitude overlays & Scores (originally Step 3) */}
+              <div 
+                className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px] transition-transform duration-100 ease-out"
+                style={{ transform: `translateX(${diagnosticSlideX}%)` }}
+              >
+                <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 shrink-0">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 04 / COMPARISON RESULTS</span>
+                    <h2 className="text-sm font-semibold text-zinc-300">Continuous Amplitude Overlays</h2>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-[#10b981]/5 border border-[#10b981]/25 rounded-full px-2.5 py-0.5 text-[10px] text-[#10b981] font-semibold font-mono">
+                    OVERALL MATCH: {scoreCount}%
                   </div>
                 </div>
-              )}
+
+                {/* Overlapping wave box */}
+                <div className="h-[150px] w-full bg-zinc-950 border border-zinc-800/60 rounded-xl relative flex flex-col justify-end p-4 overflow-hidden shrink-0">
+                  <div className="absolute top-3 left-3 flex flex-col gap-0.5 text-[9px] font-mono text-zinc-500">
+                    <span className="text-zinc-650">Grey Dashed = Native reference</span>
+                    <span className="text-[#10b981]">Green Solid = Your voice spectrum</span>
+                  </div>
+
+                  <div className="w-full h-full relative flex items-end">
+                    <svg className="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
+                      <path d={nativeReferencePath} fill="none" stroke="#66666f" strokeWidth="1.5" strokeDasharray="3 1.5" />
+                    </svg>
+
+                    <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="userResultGlowScrolly" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+                          <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path d={`${userResultPath} L 100 24 L 0 24 Z`} fill="url(#userResultGlowScrolly)" />
+                      <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" />
+                      
+                      {/* Highlight correction sections */}
+                      <path d="M 34 12 L 42 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" />
+                      <path d="M 72 12 L 78 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" />
+                    </svg>
+
+                    {/* Hotspot overlays */}
+                    <button 
+                      onClick={(e) => {
+                        handleWordClick(e, transcriptWords[5], 5);
+                      }}
+                      className="absolute bottom-0 left-[34%] w-[8%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
+                    >
+                      <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 1</span>
+                    </button>
+
+                    <button 
+                      onClick={(e) => {
+                        handleWordClick(e, transcriptWords[10], 10);
+                      }}
+                      className="absolute bottom-0 left-[72%] w-[6%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
+                    >
+                      <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 2</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Score slide-out bars */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 items-center">
+                  <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left justify-center h-full">
+                    <div className="flex justify-between items-center text-[10px] font-mono">
+                      <span className="text-zinc-550 uppercase">Pronunciation</span>
+                      <span className="text-white font-bold">94%</span>
+                    </div>
+                    <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
+                      <div 
+                        className="bg-[#10b981] h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: metricsVisible ? '94%' : '0%' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left justify-center h-full">
+                    <div className="flex justify-between items-center text-[10px] font-mono">
+                      <span className="text-amber-500 uppercase">Liaison (Flow)</span>
+                      <span className="text-amber-500 font-bold">89%</span>
+                    </div>
+                    <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
+                      <div 
+                        className="bg-[#fbbf24] h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: metricsVisible ? '89%' : '0%' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left justify-center h-full">
+                    <div className="flex justify-between items-center text-[10px] font-mono">
+                      <span className="text-zinc-555 uppercase">Intonation</span>
+                      <span className="text-white font-bold">91%</span>
+                    </div>
+                    <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
+                      <div 
+                        className="bg-[#10b981] h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: metricsVisible ? '91%' : '0%' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
+                {selectedWordIndex !== null && popoverPosition && activeSection === 2 && (
+                  <div 
+                    className={`absolute ${
+                      popoverDirection === 'top' 
+                        ? 'animate-spring-in-above' 
+                        : 'animate-spring-in-below'
+                    } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5 text-left`}
+                    style={{
+                      left: `${popoverPosition.left}px`,
+                      top: popoverDirection === 'top' ? `${popoverPosition.top - 12}px` : `${popoverPosition.top + popoverPosition.height + 12}px`,
+                    }}
+                  >
+                    {/* Popover Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-white text-base font-mono">
+                          {transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 font-mono">
+                          {transcriptWords[selectedWordIndex].ipa}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedWordIndex(null);
+                          setPopoverPosition(null);
+                        }}
+                        className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Dictionary translation */}
+                    <div className="bg-[#121214]/80 border border-zinc-800/60 rounded-lg p-2.5 flex flex-col gap-1 text-left">
+                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Translation</span>
+                      <span className="text-xs text-zinc-200 leading-normal font-normal">
+                        {transcriptWords[selectedWordIndex].definition}
+                      </span>
+                    </div>
+
+                    {/* Interactive Wave Comparison */}
+                    {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') && (
+                      <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
+                        <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono font-sans">Pitch Contour Comparison</span>
+                        
+                        {/* Native Waveform */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
+                          <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                            <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                              <path 
+                                d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
+                                fill="none" 
+                                stroke="#52525b" 
+                                strokeWidth="2.0" 
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </div>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'native');
+                            }}
+                            className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                          >
+                            <Play className="w-3 h-3 fill-current" />
+                          </button>
+                        </div>
+
+                        {/* User Waveform */}
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[9px] ${transcriptWords[selectedWordIndex].type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono w-10 shrink-0`}>You:</span>
+                          <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                            <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                              {transcriptWords[selectedWordIndex].type === 'liaison' ? (
+                                <>
+                                  <path 
+                                    d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
+                                    fill="none" 
+                                    stroke="#f59e0b" 
+                                    strokeWidth="2.0" 
+                                    strokeDasharray="4 2.5"
+                                    strokeLinecap="round"
+                                  />
+                                  <circle cx="49" cy="12" r="2.5" fill="#ef4444" className="animate-ping" />
+                                </>
+                              ) : (
+                                <path 
+                                  d="M0 12 C25 6, 50 18, 75 6 T100 12" 
+                                  fill="none" 
+                                  stroke="#ef4444" 
+                                  strokeWidth="1.8" 
+                                  strokeDasharray="3 2"
+                                  strokeLinecap="round"
+                                />
+                              )}
+                            </svg>
+                          </div>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'user');
+                            }}
+                            className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                          >
+                            <Play className="w-3 h-3 fill-current" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AI Tip Box */}
+                    <div className="bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-[11px] text-zinc-400 leading-relaxed">
+                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono block mb-1">AI Speech Coach Tip</span>
+                      {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') 
+                        ? transcriptWords[selectedWordIndex].tip 
+                        : "Focus on maintaining clean vocal articulation during connected speech."}
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
-          </section>
-        )}
+          </div>
+        </div>
+      )}
 
       </div>
     </div>
