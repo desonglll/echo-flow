@@ -448,6 +448,33 @@ export default function App() {
       onMouseMove={handleMouseMove}
       className="w-full bg-[#09090b] text-[#ededef] font-sans relative"
     >
+      {/* Ambient background blobs for premium designer atmosphere */}
+      <div className="ambient-blob-1" />
+      <div className="ambient-blob-2" />
+
+      {/* Global SVG Glow Filters for neon laser oscilloscope aesthetic */}
+      <svg className="absolute w-0 h-0 animate-pulse" aria-hidden="true" focusable="false" style={{ pointerEvents: 'none' }}>
+        <defs>
+          <filter id="neonGlowEmerald" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="0.5" result="blur1" />
+            <feGaussianBlur stdDeviation="1.1" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur2" />
+              <feMergeNode in="blur1" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="neonGlowAmber" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="0.5" result="blur1" />
+            <feGaussianBlur stdDeviation="1.1" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur2" />
+              <feMergeNode in="blur1" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
       {/* Fixed Mouse Follower Spotlight Glow */}
       <div 
         className="fixed pointer-events-none rounded-full blur-[120px] opacity-30 transition-all duration-300 hidden md:block"
@@ -645,8 +672,8 @@ export default function App() {
                     {transcriptWords.map((item, idx) => {
                       const isSelected = selectedWordIndex === idx;
                       
-                      // Default styling
-                      let textClass = "text-zinc-300 hover:text-white hover:bg-zinc-800/60 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-200";
+                      // Default styling with premium springy hover transformations
+                      let textClass = "text-zinc-300 hover:text-white hover:bg-zinc-800/50 hover:scale-105 hover:-translate-y-0.5 active:scale-95 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-350 ease-out transform";
                       
                       // Highlight logic during active recording
                       if (shadowState === 'recording') {
@@ -655,8 +682,8 @@ export default function App() {
                         const isActive = idx === currentActiveWordIndex;
                         
                         if (isActive) {
-                          // Currently speaking word: active glow
-                          textClass = "text-white bg-zinc-850 px-1.5 py-0.5 rounded cursor-pointer ring-1 ring-zinc-700 shadow-[0_0_8px_rgba(255,255,255,0.08)] font-normal transition-all duration-150";
+                          // Currently speaking word: active glow with spring pop
+                          textClass = "text-white bg-zinc-850 px-1.5 py-0.5 rounded cursor-pointer ring-2 ring-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)] scale-105 -translate-y-0.5 font-normal transition-all duration-300 ease-out transform inline-block";
                         } else if (isSpoken) {
                           // Already spoken: accuracy color coding
                           if (item.accuracy === 'good') {
@@ -798,8 +825,11 @@ export default function App() {
 
               {/* Right Column - Recording Visualizer Console (Slides in from the right edge) */}
               <div 
-                className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px] transition-transform duration-100 ease-out"
-                style={{ transform: `translateX(${slideTranslateX}%)` }}
+                className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]"
+                style={{ 
+                  transform: `translateX(${slideTranslateX}%)`,
+                  transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
               >
                 
                 {/* Scanner laser overlay during analyzing state */}
@@ -861,7 +891,7 @@ export default function App() {
                           </linearGradient>
                         </defs>
                         <path d={`${getPathFromPoints(wavePoints)} L 100 24 L 0 24 Z`} fill="url(#liquidGlowArena)" />
-                        <path d={getPathFromPoints(wavePoints)} fill="none" stroke="#10b981" strokeWidth="2" />
+                        <path d={getPathFromPoints(wavePoints)} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
                       </svg>
                     )}
 
@@ -875,7 +905,7 @@ export default function App() {
                     
                     {shadowState === 'result' && (
                       <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                        <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" />
+                        <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
                       </svg>
                     )}
                   </div>
@@ -1159,8 +1189,11 @@ export default function App() {
 
               {/* Right Column - Amplitude overlays & Scores (originally Step 3) */}
               <div 
-                className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px] transition-transform duration-100 ease-out"
-                style={{ transform: `translateX(${diagnosticSlideX}%)` }}
+                className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-[450px]"
+                style={{ 
+                  transform: `translateX(${diagnosticSlideX}%)`,
+                  transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
               >
                 <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 shrink-0">
                   <div className="flex flex-col gap-0.5">
@@ -1192,11 +1225,11 @@ export default function App() {
                         </linearGradient>
                       </defs>
                       <path d={`${userResultPath} L 100 24 L 0 24 Z`} fill="url(#userResultGlowScrolly)" />
-                      <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" />
+                      <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
                       
                       {/* Highlight correction sections */}
-                      <path d="M 34 12 L 42 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" />
-                      <path d="M 72 12 L 78 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" />
+                      <path d="M 34 12 L 42 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" filter="url(#neonGlowAmber)" />
+                      <path d="M 72 12 L 78 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" filter="url(#neonGlowAmber)" />
                     </svg>
 
                     {/* Hotspot overlays */}
@@ -1229,8 +1262,11 @@ export default function App() {
                     </div>
                     <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
                       <div 
-                        className="bg-[#10b981] h-full rounded-full transition-all duration-1000 ease-out" 
-                        style={{ width: metricsVisible ? '94%' : '0%' }}
+                        className="bg-[#10b981] h-full rounded-full" 
+                        style={{ 
+                          width: metricsVisible ? '94%' : '0%',
+                          transition: 'width 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) 150ms'
+                        }}
                       />
                     </div>
                   </div>
@@ -1242,8 +1278,11 @@ export default function App() {
                     </div>
                     <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
                       <div 
-                        className="bg-[#fbbf24] h-full rounded-full transition-all duration-1000 ease-out" 
-                        style={{ width: metricsVisible ? '89%' : '0%' }}
+                        className="bg-[#fbbf24] h-full rounded-full" 
+                        style={{ 
+                          width: metricsVisible ? '89%' : '0%',
+                          transition: 'width 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) 350ms'
+                        }}
                       />
                     </div>
                   </div>
@@ -1255,8 +1294,11 @@ export default function App() {
                     </div>
                     <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
                       <div 
-                        className="bg-[#10b981] h-full rounded-full transition-all duration-1000 ease-out" 
-                        style={{ width: metricsVisible ? '91%' : '0%' }}
+                        className="bg-[#10b981] h-full rounded-full" 
+                        style={{ 
+                          width: metricsVisible ? '91%' : '0%',
+                          transition: 'width 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) 550ms'
+                        }}
                       />
                     </div>
                   </div>
