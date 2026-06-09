@@ -79,6 +79,7 @@ export default function App() {
   const [shadowState, setShadowState] = useState<'ready' | 'recording' | 'analyzing' | 'result'>('ready');
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
   const [popoverDirection, setPopoverDirection] = useState<'top' | 'bottom'>('top');
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null);
   
   // Mouse Follower Coordinates
   const [mousePos, setMousePos] = useState({ x: -450, y: -450 });
@@ -111,6 +112,38 @@ export default function App() {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top
       });
+    }
+  };
+
+  const handleWordClick = (e: React.MouseEvent<HTMLButtonElement>, item: WordItem, index: number) => {
+    if (shadowState === 'recording') return;
+    
+    playWordAudio(item, index, 'native');
+    
+    if (selectedWordIndex === index) {
+      setSelectedWordIndex(null);
+      setPopoverPosition(null);
+    } else {
+      const buttonRect = e.currentTarget.getBoundingClientRect();
+      const cardElement = e.currentTarget.closest('.premium-card');
+      
+      if (cardElement) {
+        const cardRect = cardElement.getBoundingClientRect();
+        const cardWidth = cardRect.width;
+        const relativeTop = buttonRect.top - cardRect.top;
+        let relativeLeft = buttonRect.left - cardRect.left + buttonRect.width / 2;
+        
+        // Clamp relativeLeft to prevent popover from shifting off the card
+        const minLeft = 160;
+        const maxLeft = cardWidth - 160;
+        relativeLeft = Math.max(minLeft, Math.min(maxLeft, relativeLeft));
+        
+        // If the word is high up, show popover below it, otherwise show above
+        const showBelow = relativeTop < 170;
+        setPopoverDirection(showBelow ? 'bottom' : 'top');
+        setPopoverPosition({ top: relativeTop, left: relativeLeft });
+        setSelectedWordIndex(index);
+      }
     }
   };
 
@@ -637,20 +670,7 @@ export default function App() {
                       return (
                         <span key={idx} className="relative inline-block mx-0.5">
                           <button
-                            onClick={(e) => {
-                              // Prevent lookup during recording to keep focus on speaking
-                              if (shadowState === 'recording') return;
-                              
-                              playWordAudio(item, idx, 'native');
-                              if (isSelected) {
-                                setSelectedWordIndex(null);
-                              } else {
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const showBelow = rect.top < 280;
-                                setPopoverDirection(showBelow ? 'bottom' : 'top');
-                                setSelectedWordIndex(idx);
-                              }
-                            }}
+                            onClick={(e) => handleWordClick(e, item, idx)}
                             disabled={shadowState === 'recording'}
                             className={`${textClass} focus:outline-none`}
                           >
@@ -666,45 +686,6 @@ export default function App() {
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
                               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#10b981]"></span>
                             </span>
-                          )}
-
-                          {/* Floating Dictionary Tooltip */}
-                          {isSelected && (
-                            <div className={`absolute left-1/2 ${
-                              popoverDirection === 'top' 
-                                ? 'bottom-full mb-3.5 animate-spring-in' 
-                                : 'top-full mt-3.5 animate-spring-in-below'
-                            } z-50 w-[270px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-2xl flex flex-col gap-3 text-left`}>
-                              <div className="flex items-center justify-between border-b border-zinc-800/50 pb-1.5">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-bold text-white text-sm font-mono">{item.text.replace(/[^a-zA-Z]/g, "")}</span>
-                                  <span className="text-[10px] text-zinc-500 font-mono">{item.ipa}</span>
-                                </div>
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedWordIndex(null);
-                                  }}
-                                  className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                              <div className="bg-[#121214]/85 border border-zinc-850 rounded p-2 text-xs text-zinc-250 leading-relaxed font-light">
-                                {item.definition}
-                              </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedWordIndex(null);
-                                  playWordAudio(item, idx, 'native');
-                                }}
-                                className="w-full bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 text-zinc-300 text-xs py-1.5 rounded transition-all flex items-center justify-center gap-1 cursor-pointer font-medium"
-                              >
-                                <Play className="w-3 h-3 fill-current" />
-                                <span>Hear Native Syllable</span>
-                              </button>
-                            </div>
                           )}
                         </span>
                       );
@@ -750,6 +731,53 @@ export default function App() {
                   <div className="mt-2 bg-zinc-950/40 border border-zinc-905 rounded-xl p-3 flex items-center justify-between font-mono text-left shrink-0">
                     <span className="text-[8px] uppercase tracking-wider text-zinc-550 font-bold">ASR DECODER</span>
                     <span className="text-[9px] text-zinc-555">READY FOR VOICE INPUT</span>
+                  </div>
+                )}
+
+                {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
+                {selectedWordIndex !== null && popoverPosition && activeSection === 1 && (
+                  <div 
+                    className={`absolute ${
+                      popoverDirection === 'top' 
+                        ? 'animate-spring-in-above' 
+                        : 'animate-spring-in-below'
+                    } z-50 w-[270px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-2xl flex flex-col gap-3 text-left`}
+                    style={{
+                      left: `${popoverPosition.left}px`,
+                      top: popoverDirection === 'top' ? `${popoverPosition.top - 8}px` : `${popoverPosition.top + 28}px`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between border-b border-zinc-800/50 pb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-white text-sm font-mono">{transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}</span>
+                        <span className="text-[10px] text-zinc-500 font-mono">{transcriptWords[selectedWordIndex].ipa}</span>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedWordIndex(null);
+                          setPopoverPosition(null);
+                        }}
+                        className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="bg-[#121214]/85 border border-zinc-850 rounded p-2 text-xs text-zinc-250 leading-relaxed font-light">
+                      {transcriptWords[selectedWordIndex].definition}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedWordIndex(null);
+                        setPopoverPosition(null);
+                        playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'native');
+                      }}
+                      className="w-full bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 text-zinc-300 text-xs py-1.5 rounded transition-all flex items-center justify-center gap-1 cursor-pointer font-medium"
+                    >
+                      <Play className="w-3 h-3 fill-current" />
+                      <span>Hear Native Syllable</span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -1072,16 +1100,10 @@ export default function App() {
                     <span key={idx} className="relative inline-block mx-0.5">
                       <button
                         onClick={(e) => {
-                          playWordAudio(item, idx, 'native');
                           if (item.type === 'liaison' || item.type === 'flat' || isSelected) {
-                            if (isSelected) {
-                              setSelectedWordIndex(null);
-                            } else {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const showBelow = rect.top < 280;
-                              setPopoverDirection(showBelow ? 'bottom' : 'top');
-                              setSelectedWordIndex(idx);
-                            }
+                            handleWordClick(e, item, idx);
+                          } else {
+                            playWordAudio(item, idx, 'native');
                           }
                         }}
                         className={`${highlightClass} ${underlineClass} focus:outline-none`}
@@ -1096,121 +1118,135 @@ export default function App() {
                           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#10b981]"></span>
                         </span>
                       )}
-
-                      {/* Floating Diagnostic popover */}
-                      {isSelected && (
-                        <div className={`absolute left-1/2 ${
-                          popoverDirection === 'top' 
-                            ? 'bottom-full mb-3.5 animate-spring-in' 
-                            : 'top-full mt-3.5 animate-spring-in-below'
-                        } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5`}>
-                          
-                          {/* Popover Header */}
-                          <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-white text-base font-mono">{item.text.replace(/[^a-zA-Z]/g, "")}</span>
-                              <span className="text-[10px] text-zinc-500 font-mono">{item.ipa}</span>
-                            </div>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedWordIndex(null);
-                              }}
-                              className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-
-                          {/* Dictionary translation */}
-                          <div className="bg-[#121214]/80 border border-zinc-800/60 rounded-lg p-2.5 flex flex-col gap-1 text-left">
-                            <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Translation</span>
-                            <span className="text-xs text-zinc-200 leading-normal font-normal">{item.definition}</span>
-                          </div>
-
-                          {/* Interactive Wave Comparison */}
-                          {(item.type === 'liaison' || item.type === 'flat') && (
-                            <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
-                              <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono font-sans">Pitch Contour Comparison</span>
-                              
-                              {/* Native Waveform */}
-                              <div className="flex items-center gap-2">
-                                <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
-                                <div className="flex-1 h-6 flex items-center relative overflow-hidden">
-                                  <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                                    <path 
-                                      d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
-                                      fill="none" 
-                                      stroke="#52525b" 
-                                      strokeWidth="2.0" 
-                                      strokeLinecap="round"
-                                    />
-                                  </svg>
-                                </div>
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    playWordAudio(item, idx, 'native');
-                                  }}
-                                  className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
-                                >
-                                  <Play className="w-3 h-3 fill-current" />
-                                </button>
-                              </div>
-
-                              {/* User Waveform */}
-                              <div className="flex items-center gap-2">
-                                <span className={`text-[9px] ${item.type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono w-10 shrink-0`}>You:</span>
-                                <div className="flex-1 h-6 flex items-center relative overflow-hidden">
-                                  <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                                    {item.type === 'liaison' ? (
-                                      <>
-                                        <path 
-                                          d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
-                                          fill="none" 
-                                          stroke="#f59e0b" 
-                                          strokeWidth="2.0" 
-                                          strokeDasharray="4 2.5"
-                                          strokeLinecap="round"
-                                        />
-                                        <circle cx="49" cy="12" r="2.5" fill="#ef4444" className="animate-ping" />
-                                      </>
-                                    ) : (
-                                      <path 
-                                        d="M0 12 C25 6, 50 18, 75 6 T100 12" 
-                                        fill="none" 
-                                        stroke="#ef4444" 
-                                        strokeWidth="1.8" 
-                                        strokeDasharray="3 2"
-                                        strokeLinecap="round"
-                                      />
-                                    )}
-                                  </svg>
-                                </div>
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    playWordAudio(item, idx, 'user');
-                                  }}
-                                  className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
-                                >
-                                  <Play className="w-3 h-3 fill-current" />
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* AI Tip Box */}
-                          <div className="bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-[11px] text-zinc-400 leading-relaxed">
-                            <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono block mb-1">AI Speech Coach Tip</span>
-                            {(item.type === 'liaison' || item.type === 'flat') ? item.tip : "Focus on maintaining clean vocal articulation during connected speech."}
-                          </div>
-                        </div>
-                      )}
                     </span>
                   );
                 })}
               </div>
+
+              {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
+              {selectedWordIndex !== null && popoverPosition && activeSection === 3 && (
+                <div 
+                  className={`absolute ${
+                    popoverDirection === 'top' 
+                      ? 'animate-spring-in-above' 
+                      : 'animate-spring-in-below'
+                  } z-50 w-[300px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.75)] flex flex-col gap-3.5 text-left`}
+                  style={{
+                    left: `${popoverPosition.left}px`,
+                    top: popoverDirection === 'top' ? `${popoverPosition.top - 8}px` : `${popoverPosition.top + 28}px`,
+                  }}
+                >
+                  {/* Popover Header */}
+                  <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-white text-base font-mono">
+                        {transcriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "")}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-mono">
+                        {transcriptWords[selectedWordIndex].ipa}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedWordIndex(null);
+                        setPopoverPosition(null);
+                      }}
+                      className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Dictionary translation */}
+                  <div className="bg-[#121214]/80 border border-zinc-800/60 rounded-lg p-2.5 flex flex-col gap-1 text-left">
+                    <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Translation</span>
+                    <span className="text-xs text-zinc-200 leading-normal font-normal">
+                      {transcriptWords[selectedWordIndex].definition}
+                    </span>
+                  </div>
+
+                  {/* Interactive Wave Comparison */}
+                  {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') && (
+                    <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
+                      <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono font-sans">Pitch Contour Comparison</span>
+                      
+                      {/* Native Waveform */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
+                        <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                          <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                            <path 
+                              d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
+                              fill="none" 
+                              stroke="#52525b" 
+                              strokeWidth="2.0" 
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'native');
+                          }}
+                          className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                        </button>
+                      </div>
+
+                      {/* User Waveform */}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] ${transcriptWords[selectedWordIndex].type === 'liaison' ? 'text-amber-400' : 'text-red-400'} font-mono w-10 shrink-0`}>You:</span>
+                        <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                          <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                            {transcriptWords[selectedWordIndex].type === 'liaison' ? (
+                              <>
+                                <path 
+                                  d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
+                                  fill="none" 
+                                  stroke="#f59e0b" 
+                                  strokeWidth="2.0" 
+                                  strokeDasharray="4 2.5"
+                                  strokeLinecap="round"
+                                />
+                                <circle cx="49" cy="12" r="2.5" fill="#ef4444" className="animate-ping" />
+                              </>
+                            ) : (
+                              <path 
+                                d="M0 12 C25 6, 50 18, 75 6 T100 12" 
+                                fill="none" 
+                                stroke="#ef4444" 
+                                strokeWidth="1.8" 
+                                strokeDasharray="3 2"
+                                  strokeLinecap="round"
+                              />
+                            )}
+                          </svg>
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            playWordAudio(transcriptWords[selectedWordIndex], selectedWordIndex, 'user');
+                          }}
+                          className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Tip Box */}
+                  <div className="bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-[11px] text-zinc-400 leading-relaxed">
+                    <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono block mb-1">AI Speech Coach Tip</span>
+                    {(transcriptWords[selectedWordIndex].type === 'liaison' || transcriptWords[selectedWordIndex].type === 'flat') 
+                      ? transcriptWords[selectedWordIndex].tip 
+                      : "Focus on maintaining clean vocal articulation during connected speech."}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )}
