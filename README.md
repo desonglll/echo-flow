@@ -1,73 +1,88 @@
-# React + TypeScript + Vite
+# EchoFlow - AI Connected Speech Shadowing Arena (产品设计原型)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **一句话定位 (One-Sentence Positioning)**
+>
+> *"EchoFlow 是一款基于 Apple 式滚屏叙事 (Scrollytelling) 的连读影子跟读竞技场。它将声音信号与原生节奏的隐形流态边界可视化，把生硬的单词跟读打磨成行云流水的自然腔调。"*
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📖 产品阐释与洞察 (One-Page Product Pitch)
 
-## React Compiler
+### 1. 面向谁 (Target Audience)
+* **高级英语学习者、出海科技从业者、华人职场精英**：他们的单词发音和词汇语法已经足够标准，但在开会和演讲时，说话依然显得一字一顿，充满“机器人感”的生硬中式节奏。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. 解决什么真问题 (Core Problem)
+* 市面上的发音 App（如流利说、ELSA 等）几乎全部关注于**孤立单词 (Isolated Words)** 的元音/辅音准确度。
+* 然而，母语者的自然腔调来自于**连读 (Liaisons/Connected Speech)**，即失去爆破、连读、弱读与同化。传统的单词拼读测试完全忽略了词与词之间的流畅物理过渡，导致用户“单词读得都对，连起来说就很难听”。
 
-## Expanding the ESLint configuration
+### 3. 取舍与专注 (Focus & Trade-off)
+* **不做**：词汇表、语法纠错、多选题测试、注册登录或成就勋章。
+* **专注**：极致打磨 10 毫秒级的实时 ASR 语音流匹配动画与左右双轨波形图的对齐，让隐形的“节奏流动感”和“发音连读间隙”变得具象、可触碰。
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🎨 核心体验与两大惊艳亮点 (Key Highlights)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 亮点 1：Apple 级 Scrollytelling 滚屏锁定与录音解锁（啊哈时刻）
+* **交互流程**：
+  * **第一屏**：极简高阶的 Vercel/Linear 暗色美学封面。
+  * **第二屏 (跟读竞技场)**：用户滚屏进入时，左侧的目标文本率先显现；随着继续滚动，右侧的“录音控制台”卡片像 Apple 官网硬件展示一样**从右侧边缘平滑滑入**并并排锁定。
+  * **滚屏限制 (Scroll Lock)**：为了促使用户进行跟读，当右侧卡片滑入后，**页面滚屏被锁定**，鼠标无法继续下滑，直至录音成功结束。
+  * **释放与下行**：录音成功触发 "Voice Captured" 后，页面高度被动态解锁，滚屏限制消失，用户得以向下滑入第三屏进行诊断。
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 亮点 2：实时声控 ASR 歌词流与多维对比诊断
+* **实时跟读 (ASR Feed)**：
+  * 录音时，左侧面板立刻变身实时解码控制台，未来未读到的单词呈**半透明高斯模糊状态**，当前读到的单词伴有闪烁的绿色光标 `|`。
+  * 已读完的单词根据读音准确度被实时赋予三种连读属性的颜色标记：**绿色**（发音精准）、**黄色**（连读有损/辅元过渡生硬）、**红色**（爆破音缺失/发音错误）。
+* **左右联锁波形图 (Interactive Diagnostics)**：
+  * 滑入第三屏后，左侧卡片显示诊断报告，右侧卡片显示**波形重叠图**。
+  * 当用户在左侧卡片点击黄色连读词（如 `'agentic'`）或错误词（如 `'workflows'`）时，卡片内精准弹出一颗无遮挡的气泡卡，不仅提供翻译，还能**实时绘制原音与你的语调音高折线对比**，并给出具象的“口型舌位调整建议”（例如：“✨ 尝试将 agentic 的尾音 /k/ 直接连入 workflows 的首音 /w/，中间不要做声带停顿”）。
+  * 浮动窗口坐标被严密限制在卡片内部，绝对不会被遮挡，保障交互的流畅性。
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🛠️ AI 工具的驾驭与落地思路 (AI Workflow)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+原型完全由 React 19 + TypeScript + Vite + Tailwind CSS 驱动。我借助 AI 完成了从**产品定位定义**到**高保真前端组件动画微调**的开发流程：
+1. **美术风格定义 (Vercel/Linear Design System)**：
+   * 采用 AI Prompt 引导定制了 `index.css` 的极简暗色配色。使用 `rgba(18, 18, 20, 0.5)` 磨砂玻璃质感、`1px` 极细微反光边框 (`rgba(255, 255, 255, 0.04)`) 和 `emerald-400` 主题绿，营造高端 AI 科技感。
+2. **Scrollytelling 粘性与滑动物理量计算**：
+   * 引导 AI 使用 React `useEffect` 动态计算页面 `window.scrollY` 与 `window.innerHeight` 的精确比值，生成 `arenaProgress` 与 `diagnosticsProgress`。
+   * 通过 `translateX` 运动公式将滚屏进度完美映射到右侧卡片的滑入距离，避免了使用繁重的第三方动效库，实现了零卡顿的原生交互。
+3. **交互缺陷纠偏与微调**：
+   * **气泡弹窗遮挡问题**：将气泡弹窗从内层 overflow 滚动容器中剥离出来，提升至 Card 层级进行 absolute 定位，并自动进行边界横向 Clamp 限制，确保弹窗永远完美居中且不被裁切。
+   * **双气泡渲染冲突**：在 Section 4 左右并排的两张诊断卡片中，原版 AI 生成的代码会导致同一词汇在左右卡片内同时显示弹窗。通过引入 `popoverCardId` 状态机精准标识来源，确保了全局有且只有一个气泡响应。
+
+---
+
+## 🔮 两周深度迭代规划 (Next Steps)
+
+如果再多出两周时间，我会砍掉或推迟非核心的注册/账户/词本系统，把时间用在将 AI 的“巧”落得更实：
+1. **浏览器真实录音与音高比对 (Web Audio API & DTW 算法)**：
+   * 将目前模拟的 oscilloscope 声波和模拟得分替换为真正的浏览器录音模块。
+   * 在前端引入**动态时间规整算法 (Dynamic Time Warping, DTW)**，当用户读完后，抽取用户录音的基频 (F0 Contour) 并将时间轴拉伸对齐，真正绘制出用户声调与外教声调的重叠声图，而不是假数据展示。
+2. **多句跟读场景的渐进式过渡**：
+   * 目前原型仅支持单句，后续会设计卡片以淡出滑动的形式无缝推入第二句、第三句，形成如 Apple 宣传页般丝滑的连贯探索体验。
+
+---
+
+## 🚀 原型运行与访问方式 (How to Run)
+
+本原型已配置完备的脚手架，可一键在本地运行或构建：
+
+### 本地运行
+1. 安装依赖：
+   ```bash
+   npm install
+   ```
+2. 启动本地开发服务：
+   ```bash
+   npm run dev
+   ```
+3. 终端会输出本地访问链接（通常为 `http://localhost:5173/echo-flow/` 或 `http://localhost:5174/echo-flow/`），用浏览器打开即可进行流畅的 Scrollytelling 影子跟读体验。
+
+### 生产构建
+* 运行打包命令以生成轻量级的静态 HTML/JS/CSS（打包在 `/dist` 目录中，可直接拖入 Vercel 或 Netlify 部署）：
+  ```bash
+  npm run build
+  ```
