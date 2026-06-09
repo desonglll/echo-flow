@@ -4,6 +4,8 @@
 >
 > *"EchoFlow 是一款基于 Apple 式滚屏叙事 (Scrollytelling) 的连读影子跟读竞技场。它将声音信号与原生节奏的隐形流态边界可视化，把生硬的单词跟读打磨成行云流水的自然腔调。"*
 
+<img width="1907" height="865" alt="image" src="https://github.com/user-attachments/assets/6d0bd1a9-9bef-46d0-a6e1-2bfb6c377e50" />
+
 ---
 
 ## 📖 产品阐释与洞察 (One-Page Product Pitch)
