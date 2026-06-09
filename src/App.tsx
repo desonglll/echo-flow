@@ -2,11 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Mic,
   Sparkles,
+  CheckCircle2,
   Volume2,
+  Lock,
   RotateCcw,
+  Info,
   X,
+  ChevronRight,
+  Activity,
   Play,
-  Activity
+  TrendingUp,
+  Award,
+  Layers,
+  Zap
 } from 'lucide-react';
 import './App.css';
 
@@ -18,28 +26,28 @@ interface WordItem {
   tip: string;
 }
 
-// Podcast Transcript
+// Data for the tech podcast transcript
 const transcriptWords: WordItem[] = [
   { text: "The", type: "none", ipa: "ðə", tip: "" },
-  { text: "future", type: "perfect", ipa: "ˈfjuː.tʃər", tip: "Vowel duration and dental release are perfect." },
+  { text: "future", type: "perfect", ipa: "ˈfjuː.tʃər", tip: "Perfect vowel duration and clean release." },
   { text: "of", type: "none", ipa: "əv", tip: "" },
-  { text: "LLMs", type: "perfect", ipa: "el.el.emz", tip: "Crisp pronunciation of initials." },
+  { text: "LLMs", type: "perfect", ipa: "el.el.emz", tip: "Crisp pronunciation of initials with correct nasal final sound." },
   { text: "and", type: "none", ipa: "ænd", tip: "" },
   { 
     text: "agentic", 
     type: "liaison", 
     ipa: "əˈdʒen.tɪk", 
-    tip: "✨ Mouth Tip: Slide the ending 'c' /k/ smoothly into the 'w' of 'workflows' without inserting a glottal stop." 
+    tip: "✨ Mouth Tip: Link the 'c' sound into the next vowel 'w' (agentic-workflows) without a hard glottal stop." 
   },
   { 
     text: "workflows", 
     type: "flat", 
     ipa: "ˈwɜːk.fləʊz", 
-    tip: "Intonation drop: Elevate the first syllable 'work-' and let '-flows' drop off naturally." 
+    tip: "Pitch Drop: Stress the first syllable 'work-' and let '-flows' drop in pitch to sound natural." 
   },
   { text: "will", type: "none", ipa: "wɪl", tip: "" },
   { text: "require", type: "perfect", ipa: "rɪˈkwaɪər", tip: "Excellent rhotic vowel transition." },
-  { text: "human-in-the-loop", type: "perfect", ipa: "ˌhjuː.mən.ɪn.ðə.luːp", tip: "Superb liaison. Flowed naturally as 'human-in-the-loop'." },
+  { text: "human-in-the-loop", type: "perfect", ipa: "ˌhjuː.mən.ɪn.ðə.luːp", tip: "Superb liaison linking. Sounded exactly like 'human-in-the-loop'." },
   { 
     text: "autonomous", 
     type: "liaison", 
@@ -56,27 +64,31 @@ const transcriptWords: WordItem[] = [
 ];
 
 export default function App() {
-  // 'ready' | 'recording' | 'analyzing' | 'result'
+  // Application State
   const [shadowState, setShadowState] = useState<'ready' | 'recording' | 'analyzing' | 'result'>('ready');
   const [showFeedback, setShowFeedback] = useState<boolean>(false);
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
   
-  // Custom states for Apple product experience
-  const [playbackSpeed, setPlaybackSpeed] = useState<'1.0x' | '0.8x' | '1.2x'>('1.0x');
-  const [activeTab, setActiveTab] = useState<'practice' | 'analysis' | 'history'>('practice');
+  // Audio playback simulation states
   const [isPlayingNative, setIsPlayingNative] = useState<boolean>(false);
   const [isPlayingUser, setIsPlayingUser] = useState<boolean>(false);
   const [activeAudioWord, setActiveAudioWord] = useState<number | null>(null);
   
-  // Time and animation states
-  const [recordingSeconds, setRecordingSeconds] = useState<number>(0);
-  const recordingTimerRef = useRef<any>(null);
-  const [wavePoints, setWavePoints] = useState<number[]>(Array.from({ length: 45 }, () => 12));
-  const wavePointsRef = useRef<any>(null);
-  const [analyzingMessage, setAnalyzingMessage] = useState<string>("Analyzing vocal structures...");
+  // Time and Milisecond counters for recording state
+  const [recordingMillis, setRecordingMillis] = useState<number>(0);
+  const millisIntervalRef = useRef<any>(null);
   
-  // Sweeping timeline cursor progress (0 to 100)
-  const [playbackProgress, setPlaybackProgress] = useState<number>(0);
+  // Score details with animated count-up states
+  const [scoreCount, setScoreCount] = useState<number>(0);
+  const [metricsVisible, setMetricsVisible] = useState<boolean>(false);
+  const [analyzingProgress, setAnalyzingProgress] = useState<number>(0);
+  
+  // Dynamic Liquid Wave Path Points
+  const [wavePoints, setWavePoints] = useState<number[]>(Array.from({ length: 30 }, () => 12));
+  const wavePointsRef = useRef<any>(null);
+  
+  // Analyzing state sub-text updates
+  const [analyzingMessage, setAnalyzingMessage] = useState<string>("Analyzing voice alignment...");
 
   // Web Audio Synth to create high fidelity sound cues
   const playSynthSound = (freqs: number[], duration: number = 0.1, type: OscillatorType = 'sine') => {
@@ -110,7 +122,7 @@ export default function App() {
     }
   };
 
-  // Keyboard Spacebar listener
+  // Keyboard spacebar listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
@@ -124,17 +136,17 @@ export default function App() {
     };
   }, [shadowState]);
 
-  // Audio wave points generator (Undulating Siri wave)
+  // Audio liquid waveform animation when recording
   useEffect(() => {
     if (shadowState === 'recording') {
       const startTime = Date.now();
       wavePointsRef.current = setInterval(() => {
         const elapsed = (Date.now() - startTime) / 1000;
         setWavePoints(prev => prev.map((_, idx) => {
-          const baseWave = Math.sin(idx * 0.5 + elapsed * 10) * 8;
-          const secondaryWave = Math.cos(idx * 0.2 - elapsed * 14) * 4;
-          const noise = Math.random() * 2;
-          return Math.max(1, Math.min(23, 12 + baseWave + secondaryWave + noise));
+          const baseWave = Math.sin(idx * 0.6 + elapsed * 12) * 7;
+          const secondaryWave = Math.cos(idx * 0.3 - elapsed * 18) * 3;
+          const noise = Math.random() * 2.5;
+          return Math.max(2, Math.min(22, 12 + baseWave + secondaryWave + noise));
         }));
       }, 40);
     } else {
@@ -147,49 +159,82 @@ export default function App() {
     };
   }, [shadowState]);
 
-  // Timer counter when recording
+  // Subsecond counter when recording (0 to 15 seconds)
   useEffect(() => {
     if (shadowState === 'recording') {
-      setRecordingSeconds(0);
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingSeconds(prev => prev + 1);
-      }, 1000);
+      setRecordingMillis(0);
+      const start = Date.now();
+      millisIntervalRef.current = setInterval(() => {
+        const diff = (Date.now() - start) / 1000;
+        setRecordingMillis(diff);
+        if (diff >= 15) {
+          // Trigger evaluation auto-stop at 15s limit
+          handleMainActionClick();
+        }
+      }, 100);
     } else {
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
+      if (millisIntervalRef.current) {
+        clearInterval(millisIntervalRef.current);
       }
     }
     return () => {
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      if (millisIntervalRef.current) clearInterval(millisIntervalRef.current);
     };
   }, [shadowState]);
 
-  // Animate timeline sweeping cursor
+  // State transitions: count-up & metrics expansion triggers
   useEffect(() => {
-    let animationFrameId: number;
-    let startTime: number;
-    const duration = 700; // Matches playback duration of playFullAudio (700ms)
-    
-    if (isPlayingNative || isPlayingUser) {
-      startTime = Date.now();
-      const updateCursor = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(100, (elapsed / duration) * 100);
-        setPlaybackProgress(progress);
-        if (progress < 100) {
-          animationFrameId = requestAnimationFrame(updateCursor);
+    if (shadowState === 'result') {
+      // 1. Score count up animation
+      setScoreCount(0);
+      const end = 92;
+      const duration = 1000; // ms
+      const startTime = performance.now();
+      
+      const animateScore = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = progress * (2 - progress); // Ease out quad
+        const currentScore = Math.floor(easedProgress * end);
+        setScoreCount(currentScore);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animateScore);
         } else {
-          setPlaybackProgress(0);
+          setScoreCount(end);
         }
       };
-      animationFrameId = requestAnimationFrame(updateCursor);
+      requestAnimationFrame(animateScore);
+      
+      // 2. Trigger metric loading bars slightly after score counts up
+      const timer = setTimeout(() => {
+        setMetricsVisible(true);
+      }, 200);
+      return () => clearTimeout(timer);
     } else {
-      setPlaybackProgress(0);
+      setScoreCount(0);
+      setMetricsVisible(false);
     }
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [isPlayingNative, isPlayingUser]);
+  }, [shadowState]);
+
+  // Digital progress loader state calculation
+  useEffect(() => {
+    if (shadowState === 'analyzing') {
+      setAnalyzingProgress(0);
+      const timer = setInterval(() => {
+        setAnalyzingProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(timer);
+            return 100;
+          }
+          return prev + 2; // Increments to 100 over ~1.1s
+        });
+      }, 22);
+      return () => clearInterval(timer);
+    } else {
+      setAnalyzingProgress(0);
+    }
+  }, [shadowState]);
 
   // Handle flow transitions
   const handleMainActionClick = () => {
@@ -203,14 +248,14 @@ export default function App() {
       // Stop recording and start analyzing
       playSynthSound([659.25, 523.25], 0.15, 'triangle');
       setShadowState('analyzing');
-      setAnalyzingMessage("Aligning vocal tracks...");
+      setAnalyzingMessage("Aligning phonetic structures...");
       
       setTimeout(() => {
-        setAnalyzingMessage("Evaluating rhythmic linking...");
+        setAnalyzingMessage("Evaluating speech liaisons...");
       }, 750);
       
       setTimeout(() => {
-        setAnalyzingMessage("Calculating pitch curves...");
+        setAnalyzingMessage("Calculating pitch contours...");
       }, 1400);
 
       // Finish analyzing
@@ -224,25 +269,21 @@ export default function App() {
       setShadowState('ready');
       setShowFeedback(false);
       setSelectedWordIndex(null);
-      setRecordingSeconds(0);
-      setWavePoints(Array.from({ length: 45 }, () => 12));
+      setRecordingMillis(0);
+      setWavePoints(Array.from({ length: 30 }, () => 12));
     }
   };
 
-  // Convert array of wave values into a smooth Bezier SVG path with mathematical phase shifting
-  const getPathFromPointsShifted = (points: number[], phase: number, amplitudeScale: number, verticalOffset: number) => {
+  // Convert array of wave values into a smooth Bezier SVG path
+  const getPathFromPoints = (points: number[]) => {
     const width = 100;
     const step = width / (points.length - 1);
-    let path = `M 0 12`;
+    let path = `M 0 ${points[0]}`;
     for (let i = 1; i < points.length; i++) {
       const x = i * step;
-      const yVal = points[i];
-      const offset = Math.sin(i * 0.4 + phase) * 2;
-      const y = 12 + (yVal - 12) * amplitudeScale + offset + verticalOffset;
+      const y = points[i];
       const prevX = (i - 1) * step;
-      const prevYVal = points[i - 1];
-      const prevOffset = Math.sin((i - 1) * 0.4 + phase) * 2;
-      const prevY = 12 + (prevYVal - 12) * amplitudeScale + prevOffset + verticalOffset;
+      const prevY = points[i - 1];
       const cpX = prevX + step / 2;
       path += ` C ${cpX} ${prevY}, ${cpX} ${y}, ${x} ${y}`;
     }
@@ -275,527 +316,725 @@ export default function App() {
     }
   };
 
-  const formatTime = (secs: number) => {
-    const min = Math.floor(secs / 60);
-    const sec = secs % 60;
-    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
-  };
-
-  // Apple GarageBand style dual tracks paths
+  // Wave paths for results and reference curves
   const nativeReferencePath = "M 0 12 C 12 5, 20 3, 30 12 C 40 21, 48 21, 58 12 C 68 3, 76 3, 86 12 C 92 19, 96 19, 100 12";
   const userResultPath = "M 0 12 C 12 6, 20 4, 30 12 C 34 12, 38 12, 42 12 C 46 12, 48 21, 58 12 C 68 4, 72 12, 75 12 C 78 12, 80 12, 86 12 C 92 18, 96 18, 100 12";
 
+  // Progress percentage out of 15 seconds
+  const recordLimitPercent = Math.min((recordingMillis / 15) * 100, 100);
+
   return (
-    <div className="flex h-screen w-full text-apple-dark font-sans flex-col relative select-none animated-mesh">
+    <div className="flex h-screen w-full bg-[#09090b] text-[#ededef] font-sans overflow-hidden select-none animate-slide-up">
       
-      {/* macOS Window Decoration Top Bar */}
-      <header className="h-12 border-b border-black/5 bg-white/40 backdrop-blur-md flex items-center justify-between px-6 shrink-0 relative z-30">
-        {/* macOS Traffic Lights */}
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-[#ff5f56] border border-[#e0443e] active:brightness-90 transition-all cursor-pointer" />
-          <div className="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-[#dfa224] active:brightness-90 transition-all cursor-pointer" />
-          <div className="w-3.5 h-3.5 rounded-full bg-[#27c93f] border border-[#1a9c2b] active:brightness-90 transition-all cursor-pointer" />
-          <span className="text-[10px] text-apple-gray font-mono ml-3 uppercase tracking-wider font-semibold">EchoFlow.app</span>
-        </div>
-
-        {/* Centered Segmented Control Tabs */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex bg-black/5 p-0.5 rounded-full border border-black/5 text-xs">
-          <button 
-            onClick={() => setActiveTab('practice')}
-            className={`px-4 py-1 rounded-full font-medium transition-all cursor-pointer active:scale-95 ${
-              activeTab === 'practice' 
-                ? 'bg-white text-apple-dark shadow-sm' 
-                : 'text-apple-gray hover:text-apple-dark'
-            }`}
-          >
-            Practice
-          </button>
-          <button 
-            onClick={() => setActiveTab('analysis')}
-            className={`px-4 py-1 rounded-full font-medium transition-all cursor-pointer active:scale-95 ${
-              activeTab === 'analysis' 
-                ? 'bg-white text-apple-dark shadow-sm' 
-                : 'text-apple-gray hover:text-apple-dark'
-            }`}
-          >
-            Speech Lab
-          </button>
-          <button 
-            onClick={() => setActiveTab('history')}
-            className={`px-4 py-1 rounded-full font-medium transition-all cursor-pointer active:scale-95 ${
-              activeTab === 'history' 
-                ? 'bg-white text-apple-dark shadow-sm' 
-                : 'text-apple-gray hover:text-apple-dark'
-            }`}
-          >
-            History
-          </button>
-        </div>
-
-        {/* User profile */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 bg-[#34c759]/10 border border-[#34c759]/20 px-2 py-0.5 rounded-md text-[9px] text-[#34c759] font-mono font-bold uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#34c759] animate-pulse" />
-            <span>AI SYSTEM</span>
-          </div>
-          <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-[10px] border border-black/10 text-apple-dark font-bold shadow-sm">
-            C
-          </div>
-        </div>
-      </header>
-
-      {/* Main Workspace Frame */}
-      <main className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-        
-        {/* Apple Logic Pro Style Dual-Track Timeline Editor */}
-        <section className="bg-white/20 border-b border-black/5 p-6 flex flex-col gap-4 relative shrink-0">
-          <div className="flex items-center justify-between text-xs text-apple-gray font-mono">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-apple-gray" />
-              <span>TIMELINE MONITOR</span>
+      {/* Sidebar Navigation */}
+      <aside className="w-[260px] border-r border-[#222226]/40 bg-[#09090b] flex flex-col justify-between shrink-0">
+        <div className="flex flex-col">
+          {/* Logo */}
+          <div className="p-6 flex flex-col gap-1">
+            <span className="text-lg font-bold tracking-tight text-premium-gradient flex items-center gap-1.5 font-sans">
+              EchoFlow
+              <span className="text-[9px] tracking-widest font-mono text-[#10b981] bg-[#10b981]/10 px-1.5 py-0.5 rounded-sm uppercase font-semibold">PRO</span>
+            </span>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-[#10b981] relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.18em] text-zinc-500 font-semibold font-mono">Engine: Online</span>
             </div>
-            <span>{shadowState === 'recording' ? formatTime(recordingSeconds) : '0:00'} / 0:15 sec</span>
           </div>
 
-          {/* Tracks Board */}
-          <div className="flex flex-col gap-3 bg-black/[0.02] border border-black/5 rounded-2xl p-4 relative overflow-hidden">
+          {/* Navigation Menu */}
+          <nav className="p-4 flex flex-col gap-1">
+            <span className="text-[9px] uppercase tracking-[0.18em] text-zinc-600 font-semibold px-3 mb-2">Practice Rooms</span>
             
-            {/* Playhead Sweeping Cursor */}
-            {playbackProgress > 0 && (
-              <div 
-                className="absolute top-0 bottom-0 w-[1.5px] bg-apple-blue shadow-[0_0_8px_rgba(0,113,227,0.7)] pointer-events-none z-20"
-                style={{ 
-                  left: `calc(96px + (100% - 96px - 16px) * ${playbackProgress} / 100)` 
-                }} 
-              />
-            )}
+            <button className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-900/60 text-zinc-100 border border-zinc-800/40 text-xs font-medium transition-all cursor-pointer">
+              <span className="flex items-center gap-2.5">
+                <Activity className="w-3.5 h-3.5 text-[#10b981]" />
+                Shadowing Analyst
+              </span>
+              <ChevronRight className="w-3 h-3 text-zinc-600 animate-pulse" />
+            </button>
 
-            {/* Timeline Ruler */}
-            <div className="h-4 border-b border-black/5 relative flex justify-between px-2 text-[9px] text-apple-gray font-mono">
-              <span>0:00</span>
-              <span>0:02</span>
-              <span>0:04</span>
-              <span>0:06</span>
-              <span>0:08</span>
-              <span>0:10</span>
-              <span>0:12</span>
-              <span>0:14</span>
+            <button className="flex items-center justify-between px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/30 text-xs font-medium transition-all group cursor-not-allowed">
+              <span className="flex items-center gap-2.5">
+                <Award className="w-3.5 h-3.5 text-zinc-700 group-hover:text-zinc-600" />
+                Intonation Trainer
+              </span>
+              <Lock className="w-3.5 h-3.5 text-zinc-800" />
+            </button>
+
+            <button className="flex items-center justify-between px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/30 text-xs font-medium transition-all group cursor-not-allowed">
+              <span className="flex items-center gap-2.5">
+                <Layers className="w-3.5 h-3.5 text-zinc-700 group-hover:text-zinc-600" />
+                Liaison Masterclass
+              </span>
+              <Lock className="w-3.5 h-3.5 text-zinc-800" />
+            </button>
+
+            <button className="flex items-center justify-between px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/30 text-xs font-medium transition-all group cursor-pointer">
+              <span className="flex items-center gap-2.5">
+                <TrendingUp className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400" />
+                Performance Dashboard
+              </span>
+              <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-zinc-600 transition-all" />
+            </button>
+          </nav>
+
+          {/* Daily Goals */}
+          <div className="px-6 py-4 mt-2 flex flex-col gap-2.5">
+            <span className="text-[9px] uppercase tracking-[0.18em] text-zinc-600 font-semibold">Today's Focus</span>
+            <div className="bg-zinc-900/20 border border-zinc-800/40 rounded-xl p-3.5 flex flex-col gap-3">
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-zinc-400">Time Shadowed</span>
+                <span className="text-white font-mono font-semibold">15 / 20m</span>
+              </div>
+              <div className="w-full bg-zinc-800/50 h-1 rounded-full overflow-hidden">
+                <div className="bg-gradient-to-r from-emerald-500 to-[#10b981] h-full rounded-full w-[75%] transition-all duration-1000 ease-out" />
+              </div>
+              <div className="flex items-center gap-1.5 text-[9px] text-zinc-500">
+                <Zap className="w-3 h-3 text-amber-500 fill-amber-500/20" />
+                <span>3-day streak active. Keep rolling!</span>
+              </div>
             </div>
+          </div>
+        </div>
 
-            {/* TRACK 1: Reference Audio Wave */}
-            <div className="h-16 flex items-center relative rounded-xl bg-white/45 border border-white/80 px-4 group shadow-sm transition-all duration-300 glass-glow-overlay">
-              <div className="w-24 shrink-0 flex flex-col gap-0.5 text-left select-none">
-                <span className="text-[10px] font-bold text-apple-gray uppercase tracking-wider flex items-center gap-1.5">
-                  <Volume2 className="w-3.5 h-3.5 text-apple-gray" /> Native Track
-                </span>
-                <span className="text-[9px] font-mono text-zinc-400">Model speaker</span>
+        {/* Sidebar Footer User Profile */}
+        <div className="p-4 border-t border-[#222226]/40 bg-[#09090b]/80 backdrop-blur-sm flex flex-col gap-3">
+          <div className="flex items-center justify-between text-[10px] bg-zinc-950/80 border border-zinc-800/50 px-2.5 py-1.5 rounded-lg text-zinc-400 font-mono">
+            <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-[#10b981] fill-[#10b981]/10 animate-bounce" /> Practice Time</span>
+            <span className="font-semibold text-white">120m left</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-zinc-900 flex items-center justify-center border border-zinc-800 text-white font-medium text-xs">
+                C
               </div>
-              
-              {/* Wave Display */}
-              <div className="flex-1 h-10 relative flex items-center">
-                <svg className="w-full h-full opacity-60" viewBox="0 0 100 24" preserveAspectRatio="none">
-                  <path 
-                    d={nativeReferencePath} 
-                    fill="none" 
-                    stroke="#86868b" 
-                    strokeWidth="1.5" 
-                    strokeLinecap="round" 
-                  />
-                </svg>
-              </div>
+              <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#10b981] border border-[#09090b] rounded-full animate-pulse"></div>
+            </div>
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-xs font-semibold text-white truncate">Carl (Beta User)</span>
+              <span className="text-[9px] text-zinc-500 font-mono truncate">carl@echoflow.ai</span>
+            </div>
+          </div>
+        </div>
+      </aside>
 
-              {/* Play buttons next to track */}
+      {/* Main Workspace Area */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto dots-grid">
+        
+        {/* Workspace Top Header Bar */}
+        <header className="h-[60px] border-b border-[#222226]/40 bg-[#09090b]/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
+          <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 tracking-wider">
+            <span>VAULT</span>
+            <ChevronRight className="w-3 h-3 text-zinc-700" />
+            <span>PODCASTS</span>
+            <ChevronRight className="w-3 h-3 text-zinc-700" />
+            <span className="text-zinc-100 font-semibold transition-colors duration-300">EP42: LLMS & AGENTIC WORKFLOWS</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {shadowState === 'result' && (
+              <div className="flex items-center gap-1.5 bg-[#10b981]/5 border border-[#10b981]/20 rounded-full px-3 py-1 text-xs text-[#10b981] font-medium animate-pulse">
+                <Sparkles className="w-3 h-3" />
+                <span>Overall Accuracy: {scoreCount}%</span>
+              </div>
+            )}
+            
+            <button 
+              onClick={() => {
+                if (shadowState === 'result') {
+                  setShowFeedback(!showFeedback);
+                  setSelectedWordIndex(null);
+                  playSynthSound([587.33], 0.1, 'sine');
+                } else {
+                  handleMainActionClick();
+                }
+              }}
+              className={`text-xs px-3.5 py-1.5 rounded-lg border font-medium transition-all duration-300 cursor-pointer ${
+                shadowState !== 'result' 
+                  ? 'border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 text-zinc-400 hover:text-white'
+                  : showFeedback 
+                    ? 'border-[#10b981]/30 bg-[#10b981]/15 text-[#10b981] shadow-[0_0_15px_rgba(16,185,129,0.12)]'
+                    : 'border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:text-white hover:border-zinc-700'
+              }`}
+            >
+              {shadowState !== 'result' 
+                ? 'Simulate Evaluation Flow' 
+                : showFeedback 
+                  ? '✨ Overlay: Active' 
+                  : 'Show Overlay'
+              }
+            </button>
+          </div>
+        </header>
+
+        {/* Dashboard Panels Grid Container */}
+        <div className="flex-1 p-8 grid grid-cols-1 xl:grid-cols-2 gap-8 items-start max-w-[1600px] w-full mx-auto">
+          
+          {/* LEFT PANEL - The Speech Material Transcript */}
+          <section className="premium-card rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative min-h-[480px]">
+            {/* Laser scan animation line (active during analysis) */}
+            {shadowState === 'analyzing' && <div className="animate-scan-laser" />}
+
+            {/* Header info */}
+            <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[9px] tracking-[0.2em] text-zinc-500 font-bold uppercase font-sans">Shadowing Text</span>
+                <h2 className="text-sm font-semibold text-zinc-300">Speech Target Material</h2>
+              </div>
               <button 
                 onClick={() => playFullAudio('native')}
                 disabled={isPlayingNative}
-                className="absolute right-4 p-2 bg-white hover:bg-apple-light-gray border border-black/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:opacity-50 shadow-sm active:scale-95 z-10"
+                className="flex items-center gap-2 text-[11px] text-zinc-400 hover:text-zinc-100 bg-zinc-900/40 border border-zinc-800/60 rounded-lg px-3 py-1.5 transition-all duration-300 disabled:opacity-50 cursor-pointer min-w-[120px] justify-center"
               >
-                <Play className="w-3.5 h-3.5 text-apple-dark fill-apple-dark" />
+                {isPlayingNative ? (
+                  // Bouncing visualizer animation
+                  <div className="flex items-end gap-[1.5px] h-3 w-3.5 shrink-0 mb-0.5">
+                    <span className="w-[2px] h-full bg-[#10b981] rounded-full animate-audio-bar-1" />
+                    <span className="w-[2px] h-full bg-[#10b981] rounded-full animate-audio-bar-2" />
+                    <span className="w-[2px] h-full bg-[#10b981] rounded-full animate-audio-bar-3" />
+                  </div>
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5" />
+                )}
+                <span>{isPlayingNative ? 'Playing...' : 'Hear Speaker'}</span>
               </button>
             </div>
 
-            {/* TRACK 2: User Recorded Wave */}
-            <div className="h-16 flex items-center relative rounded-xl bg-white/45 border border-white/80 px-4 group shadow-sm transition-all duration-300 glass-glow-overlay">
-              <div className="w-24 shrink-0 flex flex-col gap-0.5 text-left select-none">
-                <span className="text-[10px] font-bold text-apple-gray uppercase tracking-wider flex items-center gap-1.5">
-                  <Mic className="w-3.5 h-3.5 text-apple-gray" /> Your Shadowing
-                </span>
-                <span className="text-[9px] font-mono text-zinc-400">
-                  {shadowState === 'ready' && "Track Empty"}
-                  {shadowState === 'recording' && "Recording..."}
-                  {shadowState === 'analyzing' && analyzingMessage}
-                  {shadowState === 'result' && "Score: 92%"}
-                </span>
-              </div>
-              
-              {/* Wave Display */}
-              <div className="flex-1 h-10 relative flex items-center">
-                {shadowState === 'ready' && (
-                  <div className="w-full h-[0.5px] bg-black/10" />
-                )}
-
-                {shadowState === 'recording' && (
-                  /* Overlay Three Siri Waves with varying frequencies */
-                  <svg className="w-full h-full siri-anim-light" viewBox="0 0 100 24" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="appleGlow1" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#0071e3" stopOpacity="0.12" />
-                        <stop offset="100%" stopColor="#0071e3" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    {/* Primary Wave 1 Fill */}
-                    <path d={`${getPathFromPointsShifted(wavePoints, 0, 1.0, 0)} L 100 24 L 0 24 Z`} fill="url(#appleGlow1)" />
-                    {/* Primary Wave 1 Stroke (Blue) */}
-                    <path d={getPathFromPointsShifted(wavePoints, 0, 1.0, 0)} fill="none" stroke="#0071e3" strokeWidth="1.8" strokeLinecap="round" />
-                    {/* Wave 2 Stroke (Green Shift) */}
-                    <path d={getPathFromPointsShifted(wavePoints, Math.PI / 3, 0.75, 0.5)} fill="none" stroke="#34c759" strokeWidth="1.0" strokeOpacity="0.5" strokeLinecap="round" />
-                    {/* Wave 3 Stroke (Orange Shift) */}
-                    <path d={getPathFromPointsShifted(wavePoints, -Math.PI / 4, 0.5, -0.5)} fill="none" stroke="#ff9500" strokeWidth="0.8" strokeOpacity="0.3" strokeLinecap="round" />
-                  </svg>
-                )}
-
-                {shadowState === 'analyzing' && (
-                  <div className="w-full h-full shimmer-wave opacity-30 rounded" />
-                )}
-
-                {shadowState === 'result' && (
-                  <>
-                    <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                      {/* Base User wave (Green) */}
-                      <path d={userResultPath} fill="none" stroke="#34c759" strokeWidth="2" strokeLinecap="round" />
-                      
-                      {/* Orange Highlights for Liaison breaks */}
-                      <path d="M 34 12 L 42 12" fill="none" stroke="#ff9500" strokeWidth="2.5" strokeLinecap="round" />
-                      <path d="M 72 12 L 78 12" fill="none" stroke="#ff9500" strokeWidth="2.5" strokeLinecap="round" />
-
-                      {/* Glowing Point Pins directly on the wave coordinates */}
-                      {/* Pin 1: agentic */}
-                      <circle cx="38" cy="12" r="2.5" fill="#ff9500" />
-                      
-                      {/* Pin 2: autonomous */}
-                      <circle cx="75" cy="12" r="2.5" fill="#ff9500" />
-                    </svg>
-
-                    {/* Apple Style Highlight boundary overlays */}
-                    <button 
-                      onClick={() => setSelectedWordIndex(5)}
-                      className="absolute bottom-0 left-[34%] w-[8%] h-full border-x border-t border-dashed border-[#ff9500]/30 bg-[#ff9500]/5 hover:bg-[#ff9500]/10 cursor-pointer focus:outline-none transition-colors z-10"
-                      title="Liaison correction: agentic -> workflows"
-                    />
-                    <button 
-                      onClick={() => setSelectedWordIndex(10)}
-                      className="absolute bottom-0 left-[72%] w-[6%] h-full border-x border-t border-dashed border-[#ff9500]/30 bg-[#ff9500]/5 hover:bg-[#ff9500]/10 cursor-pointer focus:outline-none transition-colors z-10"
-                      title="Liaison correction: autonomous -> feedback"
-                    />
-                  </>
-                )}
-              </div>
-
-              {/* Play button next to track */}
-              {shadowState === 'result' && (
-                <button 
-                  onClick={() => playFullAudio('user')}
-                  disabled={isPlayingUser}
-                  className="absolute right-4 p-2 bg-white hover:bg-apple-light-gray border border-black/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:opacity-50 shadow-sm active:scale-95 z-10"
-                >
-                  <Play className="w-3.5 h-3.5 text-apple-dark fill-apple-dark" />
-                </button>
-              )}
+            {/* Instruction tooltip */}
+            <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-3.5 flex items-start gap-3 text-xs text-zinc-400">
+              <Info className="w-4 h-4 text-zinc-650 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                Practice speech shadowing. Switch on the <strong className="text-zinc-200">Overlay</strong> to see linking evaluations. Click corrected words like <strong className="text-amber-400">agentic</strong> to reveal visual tips.
+              </p>
             </div>
 
-          </div>
-        </section>
-
-        {/* Apple Music Style Scrolling Lyrics Transcription Panel */}
-        <section className="flex-1 flex flex-col justify-center items-center px-8 py-12 text-center max-w-[1000px] mx-auto min-h-[360px] relative">
-          
-          {/* Transcript lyrics wall */}
-          <div className="flex-1 flex flex-wrap justify-center content-center gap-x-2 gap-y-6 leading-[4rem] text-3xl md:text-4xl font-bold tracking-tight text-apple-gray/40 select-text font-sans">
-            {transcriptWords.map((item, idx) => {
-              const isSelected = selectedWordIndex === idx;
-              const isEvaluating = showFeedback && shadowState === 'result';
-              
-              // Standard styling
-              let wordStyle = "text-apple-dark/40 hover:text-apple-dark px-2.5 py-0.5 rounded-2xl cursor-pointer transition-all duration-300 spring-active hover:bg-white/60 hover:shadow-[0_4px_12px_rgba(0,0,0,0.03)]";
-              let borderStyle = "";
-              
-              if (isEvaluating) {
-                if (item.type === 'perfect') {
-                  wordStyle = "text-[#34c759] hover:text-[#34c759]/80 px-2.5 py-0.5 cursor-pointer transition-colors";
-                } else if (item.type === 'liaison') {
-                  wordStyle = "text-[#ff9500] bg-[#ff9500]/5 px-2.5 py-0.5 rounded-2xl border border-[#ff9500]/20 animate-pulse shadow-[0_4px_16px_rgba(255,149,0,0.06)] cursor-pointer transition-all";
-                  borderStyle = "border-b-2 border-dashed border-[#ff9500] pb-1";
-                } else if (item.type === 'flat') {
-                  wordStyle = "text-apple-gray bg-black/5 px-2.5 py-0.5 rounded-2xl border border-black/5 cursor-pointer transition-all";
-                  borderStyle = "border-b border-apple-gray pb-1";
+            {/* Transcript Word Board */}
+            <div className="flex-1 py-4 leading-[3.2rem] tracking-wide text-[21px] text-zinc-400 select-text font-sans font-light">
+              {transcriptWords.map((item, idx) => {
+                const isSelected = selectedWordIndex === idx;
+                const isEvaluating = showFeedback && shadowState === 'result';
+                
+                // Color configuration depending on type
+                let highlightClass = "text-zinc-300 hover:bg-zinc-800/40 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-300";
+                let underlineClass = "";
+                let inlineStyle = {};
+                
+                if (isEvaluating) {
+                  // Staggered fade-in delay based on index for evaluation overlay reveal
+                  inlineStyle = { 
+                    animationDelay: `${idx * 60}ms`,
+                    animationFillMode: 'both' 
+                  };
+                  
+                  if (item.type === 'perfect') {
+                    highlightClass = "text-[#10b981] bg-[#10b981]/5 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-300 animate-slide-up";
+                  } else if (item.type === 'liaison') {
+                    highlightClass = "text-[#fbbf24] bg-[#fbbf24]/5 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-300 border border-[#fbbf24]/10 pulse-correction animate-slide-up";
+                    underlineClass = "border-b-2 border-dashed border-[#fbbf24]/60 pb-0.5";
+                  } else if (item.type === 'flat') {
+                    highlightClass = "text-zinc-500 bg-zinc-500/5 px-1.5 py-0.5 rounded cursor-pointer transition-all duration-300 animate-slide-up";
+                    underlineClass = "border-b border-zinc-700";
+                  }
                 }
-              }
 
-              if (isSelected) {
-                if (item.type === 'liaison') {
-                  wordStyle += " ring-2 ring-[#ff9500]/60 bg-[#ff9500]/10 scale-105";
-                } else {
-                  wordStyle += " ring-2 ring-apple-gray bg-white/80 shadow-sm scale-105";
+                if (isSelected) {
+                  if (item.type === 'liaison') {
+                    highlightClass += " ring-2 ring-[#fbbf24]/50 bg-[#fbbf24]/10 shadow-[0_0_12px_rgba(251,191,36,0.15)]";
+                  } else {
+                    highlightClass += " ring-2 ring-zinc-700 bg-zinc-800 shadow-[0_0_10px_rgba(255,255,255,0.05)]";
+                  }
                 }
-              }
 
-              return (
-                <span key={idx} className="relative inline-block">
-                  <button
-                    onClick={() => {
-                      playWordAudio(item, idx, 'native');
-                      if (isEvaluating && (item.type === 'liaison' || item.type === 'flat')) {
-                        setSelectedWordIndex(isSelected ? null : idx);
-                      }
-                    }}
-                    className={`${wordStyle} ${borderStyle} focus:outline-none`}
-                  >
-                    {item.text}
-                  </button>
+                return (
+                  <span key={idx} className="relative inline-block mx-0.5" style={inlineStyle}>
+                    <button
+                      onClick={() => {
+                        playWordAudio(item, idx, 'native');
+                        if (isEvaluating && (item.type === 'liaison' || item.type === 'flat')) {
+                          setSelectedWordIndex(isSelected ? null : idx);
+                        }
+                      }}
+                      className={`${highlightClass} ${underlineClass} focus:outline-none`}
+                    >
+                      {item.text}
+                    </button>
 
-                  {/* Audio wave click ripple indicator */}
-                  {activeAudioWord === idx && (
-                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0071e3] opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#0071e3]"></span>
-                    </span>
-                  )}
+                    {/* Speech Wave Ripple Indicator */}
+                    {activeAudioWord === idx && (
+                      <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#10b981]"></span>
+                      </span>
+                    )}
 
-                  {/* iOS Style Action sheet popover right under the word */}
-                  {isSelected && isEvaluating && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-50 w-[310px] liquidglass-card rounded-3xl p-5 shadow-[0_24px_50px_rgba(0,0,0,0.08)] animate-fade-in flex flex-col gap-4 text-left glass-glow-overlay">
-                      
-                      {/* Header */}
-                      <div className="flex items-center justify-between border-b border-black/5 pb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-apple-dark font-sans">{item.text.replace(/[^a-zA-Z]/g, "")}</span>
-                          <span className="text-xs text-apple-gray font-mono font-medium">{item.ipa}</span>
+                    {/* Floating Glassmorphism correction popover */}
+                    {isSelected && isEvaluating && (
+                      <div className="absolute bottom-full left-1/2 mb-3.5 z-50 w-[300px] bg-[#09090b]/90 backdrop-blur-xl border border-zinc-800/80 rounded-xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.7)] animate-spring-in flex flex-col gap-3.5">
+                        
+                        {/* Popover Header */}
+                        <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-white text-base font-mono">{item.text.replace(/[^a-zA-Z]/g, "")}</span>
+                            <span className="text-[10px] text-zinc-500 font-mono">{item.ipa}</span>
+                          </div>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedWordIndex(null);
+                            }}
+                            className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                        <button 
+
+                        {/* Interactive Wave Comparison */}
+                        <div className="flex flex-col gap-2.5 bg-[#121214]/60 border border-zinc-800/60 rounded-lg p-2.5">
+                          <span className="text-[9px] uppercase tracking-[0.1em] text-zinc-500 font-bold font-mono">Pitch Contour Comparison</span>
+                          
+                          {/* Native Waveform */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] text-zinc-500 font-mono w-10 shrink-0">Native:</span>
+                            <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                              <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                                <path 
+                                  d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
+                                  fill="none" 
+                                  stroke="#52525b" 
+                                  strokeWidth="2.0" 
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </div>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playWordAudio(item, idx, 'native');
+                              }}
+                              className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                            >
+                              <Play className="w-3 h-3 fill-current" />
+                            </button>
+                          </div>
+
+                          {/* User Waveform */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] text-amber-400 font-mono w-10 shrink-0">You:</span>
+                            <div className="flex-1 h-6 flex items-center relative overflow-hidden">
+                              <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                                {item.type === 'liaison' ? (
+                                  <>
+                                    <path 
+                                      d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
+                                      fill="none" 
+                                      stroke="#f59e0b" 
+                                      strokeWidth="2.0" 
+                                      strokeDasharray="4 2.5"
+                                      strokeLinecap="round"
+                                    />
+                                    <circle cx="49" cy="12" r="2.5" fill="#ef4444" className="animate-ping" />
+                                  </>
+                                ) : (
+                                  <path 
+                                    d="M0 12 H100" 
+                                    fill="none" 
+                                    stroke="#44444a" 
+                                    strokeWidth="1.5" 
+                                    strokeLinecap="round"
+                                  />
+                                )}
+                              </svg>
+                            </div>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playWordAudio(item, idx, 'user');
+                              }}
+                              className="p-1.5 rounded bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                            >
+                              <Play className="w-3 h-3 fill-current" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* AI Tip Box */}
+                        <div className="bg-[#fbbf24]/5 border border-[#fbbf24]/10 rounded-lg p-3 text-[11px] text-[#fbbf24] leading-relaxed">
+                          {item.tip}
+                        </div>
+
+                        {/* Practice Specific Word CTA */}
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedWordIndex(null);
+                            setShadowState('ready');
+                            setTimeout(() => {
+                              handleMainActionClick();
+                            }, 300);
                           }}
-                          className="p-1 rounded-full hover:bg-black/5 text-apple-gray hover:text-apple-dark transition-colors cursor-pointer"
+                          className="w-full bg-zinc-900 border border-zinc-800/80 hover:border-[#fbbf24]/40 hover:text-white text-zinc-300 text-xs font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer group/cta"
                         >
-                          <X className="w-4 h-4" />
+                          <Mic className="w-3.5 h-3.5 group-hover/cta:animate-bounce" />
+                          <span>Practice Isolating This Word</span>
                         </button>
                       </div>
-
-                      {/* Wave comparison */}
-                      <div className="flex flex-col gap-2.5 bg-black/[0.02] border border-black/5 rounded-2xl p-3">
-                        <span className="text-[9px] uppercase tracking-wider text-apple-gray font-bold font-sans">Pitch Contour Comparison</span>
-                        
-                        {/* Native */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-apple-gray font-mono w-10 shrink-0">Native:</span>
-                          <div className="flex-1 h-6 flex items-center relative overflow-hidden">
-                            <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                              <path 
-                                d="M0 12 C15 4, 25 2, 40 12 C55 20, 65 20, 80 12 T100 12" 
-                                fill="none" 
-                                stroke="#86868b" 
-                                strokeWidth="2.0" 
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </div>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              playWordAudio(item, idx, 'native');
-                            }}
-                            className="p-1.5 rounded-full bg-white hover:bg-apple-light-gray text-apple-dark border border-black/5 shadow-sm transition-colors cursor-pointer active:scale-95 z-10"
-                          >
-                            <Play className="w-3 h-3 fill-current" />
-                          </button>
-                        </div>
-
-                        {/* You */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-[#ff9500] font-mono w-10 shrink-0">You:</span>
-                          <div className="flex-1 h-6 flex items-center relative overflow-hidden">
-                            <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                              {item.type === 'liaison' ? (
-                                <>
-                                  <path 
-                                    d="M0 12 C15 4, 25 2, 40 12 M58 12 C65 20, 80 12 T100 12" 
-                                    fill="none" 
-                                    stroke="#ff9500" 
-                                    strokeWidth="2.0" 
-                                    strokeDasharray="3.5 2.5"
-                                    strokeLinecap="round"
-                                  />
-                                  <circle cx="49" cy="12" r="2.5" fill="#ff3b30" className="animate-ping" />
-                                </>
-                              ) : (
-                                <path 
-                                  d="M0 12 H100" 
-                                  fill="none" 
-                                  stroke="#86868b" 
-                                  strokeWidth="1.5" 
-                                  strokeLinecap="round"
-                                />
-                              )}
-                            </svg>
-                          </div>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              playWordAudio(item, idx, 'user');
-                            }}
-                            className="p-1.5 rounded-full bg-white hover:bg-apple-light-gray text-apple-dark border border-black/5 shadow-sm transition-colors cursor-pointer active:scale-95 z-10"
-                          >
-                            <Play className="w-3 h-3 fill-current" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Mouth Tip */}
-                      <div className="bg-[#ff9500]/5 border border-[#ff9500]/10 rounded-2xl p-3.5 text-xs text-[#ff9500] leading-relaxed font-medium">
-                        {item.tip}
-                      </div>
-
-                      {/* CTA */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedWordIndex(null);
-                          setShadowState('ready');
-                          setTimeout(() => {
-                            handleMainActionClick();
-                          }, 300);
-                        }}
-                        className="w-full bg-[#34c759] hover:bg-[#34c759]/90 text-white text-xs font-bold py-2.5 rounded-2xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95 z-10"
-                      >
-                        <Mic className="w-4 h-4" />
-                        <span>Isolate & Practice Word</span>
-                      </button>
-                    </div>
-                  )}
-                </span>
-              );
-            })}
-          </div>
-
-          {/* Large Overall Score display overlay (Apple-style summary banner) */}
-          {shadowState === 'result' && (
-            <div className="absolute top-4 bg-white/60 border border-white/80 rounded-2xl px-5 py-3.5 flex items-center gap-6 shadow-[0_12px_24px_rgba(0,0,0,0.03)] backdrop-blur-md glass-glow-overlay">
-              <div className="flex flex-col gap-0.5 text-left border-r border-black/5 pr-5">
-                <span className="text-[9px] uppercase tracking-widest text-apple-gray font-bold font-mono">Evaluation score</span>
-                <span className="text-3xl font-extralight text-[#34c759] tracking-tight">92% <span className="text-[10px] font-bold uppercase tracking-wider text-apple-gray font-sans ml-1">Excellent</span></span>
-              </div>
-              
-              <div className="flex items-center gap-6 text-[10px] text-apple-gray font-mono">
-                <div className="flex flex-col gap-0.5">
-                  <span>Pronunciation</span>
-                  <span className="text-apple-dark font-bold">94%</span>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[#ff9500]">Liaison linking</span>
-                  <span className="text-[#ff9500] font-bold">89%</span>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span>Pitch Intonation</span>
-                  <span className="text-apple-dark font-bold">91%</span>
-                </div>
-              </div>
+                    )}
+                  </span>
+                );
+              })}
             </div>
-          )}
-        </section>
 
-        {/* Floating iOS Voice Memos-Style Controller Dock (Bottom Center) */}
-        <div className="sticky bottom-8 left-0 right-0 flex justify-center z-40 px-4">
-          <div className="liquidglass-panel rounded-full px-6 py-3 shadow-[0_16px_36px_rgba(0,0,0,0.06)] flex items-center gap-8 max-w-[580px] w-full justify-between glass-glow-overlay">
+            {/* Overall stats list at bottom of left panel */}
+            {shadowState === 'result' && (
+              <div className="mt-4 border-t border-zinc-800/60 pt-4 flex items-center justify-between text-xs text-zinc-500 animate-slide-up">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#10b981]" />
+                  <span>Matching Flow: <strong>92% Perfect</strong></span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" /> Perfect (9)</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Liaison (2)</span>
+                  <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-zinc-650" /> Flat (2)</span>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* RIGHT PANEL - The AI Interactive Waveform Visualizer */}
+          <section className="flex flex-col gap-6 w-full">
             
-            {/* Speed Control Indicator */}
-            <div className="flex items-center gap-1.5">
-              <button 
-                onClick={() => {
-                  playSynthSound([300], 0.08, 'sine');
-                  setPlaybackSpeed(prev => prev === '1.0x' ? '0.8x' : prev === '0.8x' ? '1.2x' : '1.0x');
-                }}
-                className="w-10 h-10 rounded-full bg-white hover:bg-apple-light-gray text-apple-dark border border-black/5 text-[10px] font-mono font-bold flex items-center justify-center cursor-pointer transition-colors shadow-sm active:scale-95 z-10"
-                title="Change Playback Speed"
-              >
-                {playbackSpeed}
-              </button>
-              <span className="text-[8px] font-mono text-apple-gray uppercase tracking-wider font-semibold">Speed</span>
-            </div>
+            {/* The Visualizer Card */}
+            <div className="premium-card rounded-2xl p-8 shadow-2xl relative flex flex-col gap-6 overflow-hidden">
+              
+              {/* Recording progress timeline bar (active when recording) */}
+              {shadowState === 'recording' && (
+                <div 
+                  className="absolute top-0 left-0 h-[3px] bg-gradient-to-r from-emerald-500 via-[#10b981] to-emerald-400 transition-all duration-100 ease-linear"
+                  style={{ width: `${recordLimitPercent}%` }}
+                />
+              )}
 
-            {/* Central iOS Recording Button */}
-            <div className="flex flex-col items-center">
-              <div className="relative">
-                {shadowState === 'recording' && (
-                  <div className="absolute inset-[-6px] rounded-full border border-apple-red/30 ring-glow-active-light" />
-                )}
+              {/* Title Header */}
+              <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 z-10">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase">RHYTHMIC MATCH</span>
+                  <h2 className="text-sm font-semibold text-zinc-300">Continuous Amplitude Overlays</h2>
+                </div>
+                <div className="flex items-center gap-1.5 bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-850 text-[10px] text-zinc-500 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] relative">
+                    {shadowState === 'recording' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>}
+                  </span>
+                  <span>{shadowState.toUpperCase()}</span>
+                </div>
+              </div>
+
+              {/* Overlapping Waveform Visualization Area */}
+              <div className="h-[210px] w-full bg-zinc-950 border border-zinc-800/60 rounded-xl relative flex flex-col justify-end p-5 overflow-hidden z-10">
                 
-                {/* Circular Button Face */}
-                <button
-                  onClick={handleMainActionClick}
-                  className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all duration-300 relative focus:outline-none cursor-pointer active:scale-95 z-10 ${
-                    shadowState === 'ready' 
-                      ? 'border-apple-dark bg-white hover:scale-105' 
-                      : shadowState === 'recording'
-                        ? 'border-apple-dark bg-white scale-105'
-                        : shadowState === 'analyzing'
-                          ? 'border-zinc-300 bg-[#f5f5f7] cursor-not-allowed'
-                          : 'border-[#34c759] bg-white hover:scale-105 shadow-sm'
-                  }`}
-                >
-                  {/* Inside Circle/Square morphs */}
+                {/* Visualizer Status Labels inside graph */}
+                <div className="absolute top-4 left-4 flex flex-col gap-1 z-20">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-0.5 bg-zinc-650 rounded-full inline-block" />
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-mono">Native Speaker Reference</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-0.5 bg-emerald-500 rounded-full inline-block" />
+                    <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-mono">Your Voice Amplitude</span>
+                  </div>
+                </div>
+
+                {/* Duration Timer Badge */}
+                {shadowState === 'recording' && (
+                  <div className="absolute top-4 right-4 bg-red-950/20 border border-red-500/30 text-red-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full inline-block animate-ping" />
+                    <span>REC {recordingMillis.toFixed(1)}s</span>
+                  </div>
+                )}
+
+                {/* Soundwaves display */}
+                <div className="w-full h-full relative flex items-end">
+                  
+                  {/* READY STATE: Render static native curve path */}
                   {shadowState === 'ready' && (
-                    <div className="w-10 h-10 rounded-full bg-apple-red hover:brightness-95 transition-all" />
-                  )}
-                  {shadowState === 'recording' && (
-                    <div className="w-4 h-4 bg-apple-red rounded-sm animate-pulse transition-all" />
-                  )}
-                  {shadowState === 'analyzing' && (
-                    <svg className="animate-spin h-5 w-5 text-apple-gray" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg className="w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
+                      <path 
+                        d={nativeReferencePath} 
+                        fill="none" 
+                        stroke="#52525b" 
+                        strokeWidth="1.5" 
+                        strokeDasharray="3 2"
+                        strokeLinecap="round" 
+                      />
                     </svg>
                   )}
-                  {shadowState === 'result' && (
-                    <RotateCcw className="w-5 h-5 text-[#34c759]" />
+
+                  {/* RECORDING STATE: Fluid dynamic voice wave */}
+                  {shadowState === 'recording' && (
+                    <>
+                      {/* Background Native wave guide */}
+                      <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 100 24" preserveAspectRatio="none">
+                        <path d={nativeReferencePath} fill="none" stroke="#52525b" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+
+                      {/* Active Morphing Liquid Wave */}
+                      <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="liquidGlow" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        <path 
+                          d={`${getPathFromPoints(wavePoints)} L 100 24 L 0 24 Z`} 
+                          fill="url(#liquidGlow)" 
+                          className="transition-all duration-40"
+                        />
+                        <path 
+                          d={getPathFromPoints(wavePoints)} 
+                          fill="none" 
+                          stroke="#10b981" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          className="transition-all duration-40"
+                        />
+                      </svg>
+                    </>
                   )}
-                </button>
+
+                  {/* ANALYZING STATE: Shimmering wave overlay */}
+                  {shadowState === 'analyzing' && (
+                    <div className="absolute inset-0 w-full h-full shimmer-wave opacity-50 flex items-center justify-center">
+                      <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                        <path d={nativeReferencePath} fill="none" stroke="#222226" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* RESULT REVEALED STATE: Clean dual waveform overlays */}
+                  {shadowState === 'result' && (
+                    <>
+                      {/* Native Reference (Muted Zinc line) */}
+                      <svg className="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
+                        <path d={nativeReferencePath} fill="none" stroke="#66666f" strokeWidth="1.5" strokeDasharray="3 1.5" strokeLinecap="round" />
+                      </svg>
+
+                      {/* User Evaluated Wave Path */}
+                      <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="userResultGlow" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        <path d={`${userResultPath} L 100 24 L 0 24 Z`} fill="url(#userResultGlow)" />
+                        <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
+                        
+                        {/* Highlight correction sections */}
+                        <path d="M 34 12 L 42 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
+                        <path d="M 72 12 L 78 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
+                      </svg>
+
+                      {/* Bracket overlay buttons on the vector interface */}
+                      <button 
+                        onClick={() => {
+                          setSelectedWordIndex(5);
+                          playWordAudio(transcriptWords[5], 5, 'native');
+                        }}
+                        className="absolute bottom-0 left-[34%] w-[8%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
+                      >
+                        <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm tracking-wider uppercase font-semibold group-hover/gate:scale-105 transition-all">LINK 1</span>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setSelectedWordIndex(10);
+                          playWordAudio(transcriptWords[10], 10, 'native');
+                        }}
+                        className="absolute bottom-0 left-[72%] w-[6%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
+                      >
+                        <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm tracking-wider uppercase font-semibold group-hover/gate:scale-105 transition-all">LINK 2</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Grid baseline */}
+                <div className="w-full h-[0.5px] bg-zinc-800/80 z-10" />
               </div>
-              <span className="text-[8px] font-mono text-apple-gray uppercase tracking-widest mt-1.5 font-bold">
-                {shadowState === 'ready' && "RECORD"}
-                {shadowState === 'recording' && "STOP"}
-                {shadowState === 'analyzing' && "SYNC"}
-                {shadowState === 'result' && "RESET"}
-              </span>
+
+              {/* Central Audio Capture Record Action Button */}
+              <div className="flex flex-col items-center gap-4 z-10">
+                <div className="relative">
+                  {/* Dynamic pulse glow ring behind active state */}
+                  {shadowState === 'recording' && (
+                    <>
+                      <div className="absolute -inset-4 rounded-full border border-emerald-500/10 ring-glow-active" />
+                      <div className="absolute -inset-2 rounded-full border border-emerald-500/20 animate-pulse" />
+                    </>
+                  )}
+                  {shadowState === 'result' && (
+                    <div className="absolute inset-0 rounded-full bg-[#10b981]/5 blur-lg" />
+                  )}
+
+                  {/* Main Action Circle Button */}
+                  <button
+                    onClick={handleMainActionClick}
+                    className={`w-20 h-20 rounded-full flex flex-col items-center justify-center border transition-all duration-500 relative z-10 focus:outline-none cursor-pointer group ${
+                      shadowState === 'ready' 
+                        ? 'bg-zinc-900 border-zinc-800/80 hover:border-emerald-500/40 text-zinc-400 hover:text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_16px_-4px_rgba(0,0,0,0.5)]'
+                        : shadowState === 'recording'
+                          ? 'bg-zinc-950 border-emerald-500 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
+                          : shadowState === 'analyzing'
+                            ? 'bg-zinc-950 border-zinc-850 text-zinc-600 cursor-not-allowed'
+                            : 'bg-zinc-900 border-emerald-500/50 hover:border-emerald-500 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                    }`}
+                  >
+                    {shadowState === 'ready' && (
+                      <>
+                        <Mic className="w-6 h-6 text-zinc-400 group-hover:text-white transition-colors" />
+                        <span className="text-[8px] font-mono tracking-widest text-zinc-500 mt-1 uppercase font-bold">SPACE</span>
+                      </>
+                    )}
+                    {shadowState === 'recording' && (
+                      <>
+                        <div className="w-3.5 h-3.5 bg-emerald-400 rounded-sm animate-pulse" />
+                        <span className="text-[8px] font-mono tracking-widest text-emerald-400 mt-1 uppercase font-bold">STOP</span>
+                      </>
+                    )}
+                    {shadowState === 'analyzing' && (
+                      // Monospace percentage counter during loading state
+                      <span className="text-xs font-mono text-[#10b981] font-bold">{analyzingProgress}%</span>
+                    )}
+                    {shadowState === 'result' && (
+                      <>
+                        <RotateCcw className="w-6 h-6" />
+                        <span className="text-[8px] font-mono tracking-widest text-emerald-400 mt-1.5 uppercase font-bold">RETRY</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Subtext description underneath trigger button */}
+                <div className="flex flex-col items-center text-center gap-1">
+                  <span className="text-xs font-semibold tracking-wide text-zinc-300">
+                    {shadowState === 'ready' && "Click or Press Spacebar to Record"}
+                    {shadowState === 'recording' && "Capturing Speech Signal..."}
+                    {shadowState === 'analyzing' && analyzingMessage}
+                    {shadowState === 'result' && "Analysis Complete"}
+                  </span>
+                  <span className="text-[10px] text-zinc-500 font-mono tracking-wider">
+                    {shadowState === 'ready' && "MAX TARGET RECORDING: 15 SECONDS"}
+                    {shadowState === 'recording' && "TAP THE SPACEBAR TO PROCESS FEEDBACK"}
+                    {shadowState === 'analyzing' && "RESOLVING SIGNAL TIMELINES"}
+                    {shadowState === 'result' && "PRESS SPACEBAR TO RESET BOARD"}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* AI Overlay Toggler */}
-            <div className="flex items-center gap-2">
-              <span className="text-[8px] font-mono text-apple-gray uppercase tracking-wider font-semibold">Overlay</span>
-              <button 
-                onClick={() => {
-                  if (shadowState === 'result') {
-                    setShowFeedback(!showFeedback);
-                    setSelectedWordIndex(null);
-                    playSynthSound([600], 0.1, 'sine');
-                  } else {
-                    handleMainActionClick();
-                  }
-                }}
-                className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-sm active:scale-95 z-10 ${
-                  showFeedback && shadowState === 'result'
-                    ? 'bg-[#34c759]/10 border-[#34c759] text-[#34c759]' 
-                    : 'bg-white border-black/5 text-apple-gray hover:text-apple-dark hover:bg-apple-light-gray'
-                }`}
-                title="Toggle Speech Feedback Overlay"
-              >
-                <Sparkles className="w-4 h-4" />
-              </button>
+            {/* AI SCORE SUMMARY CARD (Revealed in result state) */}
+            <div className={`transition-all duration-500 ${
+              shadowState === 'result' ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95 pointer-events-none h-0 overflow-hidden'
+            }`}>
+              <div className="premium-card rounded-2xl p-6 shadow-2xl flex flex-col gap-6">
+                
+                {/* Section Header */}
+                <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] tracking-widest text-[#10b981] font-bold uppercase">Coaching metrics</span>
+                    <h2 className="text-sm font-semibold text-zinc-300">AI Scoring Metrics</h2>
+                  </div>
+                  <button
+                    onClick={() => playFullAudio('user')}
+                    disabled={isPlayingUser}
+                    className="flex items-center gap-2 text-[11px] text-zinc-400 hover:text-zinc-100 bg-zinc-900/40 border border-zinc-800/60 rounded-lg px-3 py-1.5 transition-all duration-300 disabled:opacity-50 cursor-pointer min-w-[120px] justify-center"
+                  >
+                    {isPlayingUser ? (
+                      <div className="flex items-end gap-[1.5px] h-3 w-3.5 shrink-0 mb-0.5">
+                        <span className="w-[2px] h-full bg-[#10b981] rounded-full animate-audio-bar-1" />
+                        <span className="w-[2px] h-full bg-[#10b981] rounded-full animate-audio-bar-2" />
+                        <span className="w-[2px] h-full bg-[#10b981] rounded-full animate-audio-bar-3" />
+                      </div>
+                    ) : (
+                      <Volume2 className="w-3.5 h-3.5" />
+                    )}
+                    <span>{isPlayingUser ? 'Playing...' : 'Play Attempt'}</span>
+                  </button>
+                </div>
+
+                {/* Score Grid layout */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  {/* Metric Block 1 - Pronunciation */}
+                  <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-2 relative overflow-hidden">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[9px] uppercase font-mono tracking-wider text-zinc-500">Pronunciation</span>
+                      <span className="text-xs font-bold text-white font-mono">94%</span>
+                    </div>
+                    <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
+                      <div 
+                        className="bg-[#10b981] h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: metricsVisible ? '94%' : '0%' }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-zinc-500 leading-normal mt-1">
+                      Individual phonemes are well articulated. Intelligibility is excellent.
+                    </span>
+                  </div>
+
+                  {/* Metric Block 2 - Liaison & Linking */}
+                  <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-2 relative overflow-hidden">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[9px] uppercase font-mono tracking-wider text-[#fbbf24]">Liaison (Flow)</span>
+                      <span className="text-xs font-bold text-[#fbbf24] font-mono">89%</span>
+                    </div>
+                    <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
+                      <div 
+                        className="bg-[#fbbf24] h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: metricsVisible ? '89%' : '0%' }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-[#fbbf24]/80 leading-normal mt-1">
+                      Missed linking consonants in "agentic" and "autonomous".
+                    </span>
+                  </div>
+
+                  {/* Metric Block 3 - Intonation */}
+                  <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-2 relative overflow-hidden">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[9px] uppercase font-mono tracking-wider text-zinc-500">Intonation</span>
+                      <span className="text-xs font-bold text-white font-mono">91%</span>
+                    </div>
+                    <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
+                      <div 
+                        className="bg-[#10b981] h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: metricsVisible ? '91%' : '0%' }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-zinc-500 leading-normal mt-1">
+                      Pitch contours match reference waveforms. Slightly flat end stresses.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Speech Improvement Summary Callout */}
+                <div className="bg-[#fbbf24]/5 border border-[#fbbf24]/10 rounded-xl p-4 flex items-start gap-3 animate-slide-up">
+                  <Sparkles className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="flex flex-col gap-1 text-xs">
+                    <span className="font-semibold text-white">AI Coach Diagnostic Summary</span>
+                    <p className="text-zinc-400 leading-relaxed">
+                      "Primary focus remains on linking final consonants to following vowels. Try blending the final <strong className="text-white">/k/</strong> sound in <strong className="text-amber-400">'agentic'</strong> directly into the <strong className="text-white">/w/</strong> of <strong className="text-amber-400">'workflows'</strong>. Doing so removes glottal stops and raises liaison flow past 95%."
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-          </div>
+          </section>
+
         </div>
-
       </main>
     </div>
   );
