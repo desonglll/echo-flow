@@ -81,6 +81,7 @@ export default function App() {
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
   const [popoverDirection, setPopoverDirection] = useState<'top' | 'bottom'>('top');
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number; height: number } | null>(null);
+  const [popoverCardId, setPopoverCardId] = useState<number | null>(null);
   
   // Mouse Follower Coordinates
   const [mousePos, setMousePos] = useState({ x: -450, y: -450 });
@@ -116,14 +117,15 @@ export default function App() {
     }
   };
 
-  const handleWordClick = (e: React.MouseEvent<HTMLButtonElement>, item: WordItem, index: number) => {
+  const handleWordClick = (e: React.MouseEvent<HTMLButtonElement>, item: WordItem, index: number, cardId: number) => {
     if (shadowState === 'recording') return;
     
     playWordAudio(item, index, 'native');
     
-    if (selectedWordIndex === index) {
+    if (selectedWordIndex === index && popoverCardId === cardId) {
       setSelectedWordIndex(null);
       setPopoverPosition(null);
+      setPopoverCardId(null);
     } else {
       const buttonRect = e.currentTarget.getBoundingClientRect();
       const cardElement = e.currentTarget.closest('.premium-card');
@@ -144,6 +146,7 @@ export default function App() {
         setPopoverDirection(showBelow ? 'bottom' : 'top');
         setPopoverPosition({ top: relativeTop, left: relativeLeft, height: buttonRect.height });
         setSelectedWordIndex(index);
+        setPopoverCardId(cardId);
       }
     }
   };
@@ -366,6 +369,7 @@ export default function App() {
     } else if (shadowState === 'result') {
       setShadowState('ready');
       setSelectedWordIndex(null);
+      setPopoverCardId(null);
       setRecordingMillis(0);
       setWavePoints(Array.from({ length: 30 }, () => 12));
     }
@@ -624,8 +628,8 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Podcast Timed Transcript Layout */}
-                <div className="flex-1 py-2 overflow-y-auto no-scrollbar flex items-start gap-4 pr-2 select-text">
+                {/* Podcast Timed Transcript Layout (Completely scrollbar-free and non-scrollable) */}
+                <div className="flex-1 py-2 overflow-hidden flex items-start gap-4 pr-2 select-text">
                   
                   {/* Podcasting Line Timestamps */}
                   <div className="flex flex-col gap-8 text-[9px] font-mono text-zinc-600 w-10 pt-1 shrink-0 border-r border-zinc-800/40 pr-2.5">
@@ -679,7 +683,7 @@ export default function App() {
                       return (
                         <span key={idx} className="relative inline-block mx-0.5">
                           <button
-                            onClick={(e) => handleWordClick(e, item, idx)}
+                            onClick={(e) => handleWordClick(e, item, idx, 1)}
                             disabled={shadowState === 'recording'}
                             className={`${textClass} focus:outline-none`}
                           >
@@ -744,7 +748,7 @@ export default function App() {
                 )}
 
                 {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
-                {selectedWordIndex !== null && popoverPosition && activeSection === 1 && (
+                {selectedWordIndex !== null && popoverPosition && activeSection === 1 && popoverCardId === 1 && (
                   <div 
                     className={`absolute ${
                       popoverDirection === 'top' 
@@ -766,6 +770,7 @@ export default function App() {
                           e.stopPropagation();
                           setSelectedWordIndex(null);
                           setPopoverPosition(null);
+                          setPopoverCardId(null);
                         }}
                         className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
                       >
@@ -1003,7 +1008,7 @@ export default function App() {
                         <button
                           onClick={(e) => {
                             if (item.type === 'liaison' || item.type === 'flat' || isSelected) {
-                              handleWordClick(e, item, idx);
+                              handleWordClick(e, item, idx, 3);
                             } else {
                               playWordAudio(item, idx, 'native');
                             }
@@ -1026,7 +1031,7 @@ export default function App() {
                 </div>
 
                 {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
-                {selectedWordIndex !== null && popoverPosition && activeSection === 2 && (
+                {selectedWordIndex !== null && popoverPosition && activeSection === 2 && popoverCardId === 3 && (
                   <div 
                     className={`absolute ${
                       popoverDirection === 'top' 
@@ -1053,6 +1058,7 @@ export default function App() {
                           e.stopPropagation();
                           setSelectedWordIndex(null);
                           setPopoverPosition(null);
+                          setPopoverCardId(null);
                         }}
                         className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
                       >
@@ -1196,7 +1202,7 @@ export default function App() {
                     {/* Hotspot overlays */}
                     <button 
                       onClick={(e) => {
-                        handleWordClick(e, transcriptWords[5], 5);
+                        handleWordClick(e, transcriptWords[5], 5, 4);
                       }}
                       className="absolute bottom-0 left-[34%] w-[8%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
                     >
@@ -1205,7 +1211,7 @@ export default function App() {
 
                     <button 
                       onClick={(e) => {
-                        handleWordClick(e, transcriptWords[10], 10);
+                        handleWordClick(e, transcriptWords[10], 10, 4);
                       }}
                       className="absolute bottom-0 left-[72%] w-[6%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
                     >
@@ -1257,7 +1263,7 @@ export default function App() {
                 </div>
 
                 {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
-                {selectedWordIndex !== null && popoverPosition && activeSection === 2 && (
+                {selectedWordIndex !== null && popoverPosition && activeSection === 2 && popoverCardId === 4 && (
                   <div 
                     className={`absolute ${
                       popoverDirection === 'top' 
@@ -1284,6 +1290,7 @@ export default function App() {
                           e.stopPropagation();
                           setSelectedWordIndex(null);
                           setPopoverPosition(null);
+                          setPopoverCardId(null);
                         }}
                         className="p-0.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white cursor-pointer"
                       >
