@@ -43,10 +43,10 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
   pitchMarkers
 }) => {
   const [isLargeScreen, setIsLargeScreen] = useState(true);
-  const [activeChartTab, setActiveChartTab] = useState<'amplitude' | 'pitch'>('amplitude');
+  const [activeChartTab, setActiveChartTab] = useState<'amplitude' | 'pitch' | 'fluency'>('amplitude');
   const [activePitchMarkerIndex, setActivePitchMarkerIndex] = useState<number | null>(null);
 
-  const handleTabChange = (tab: 'amplitude' | 'pitch') => {
+  const handleTabChange = (tab: 'amplitude' | 'pitch' | 'fluency') => {
     setActiveChartTab(tab);
     setActivePitchMarkerIndex(null);
   };
@@ -160,7 +160,11 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 04 / COMPARISON RESULTS</span>
                   <h2 className="text-sm font-semibold text-zinc-300 text-left font-sans">
-                    {activeChartTab === 'amplitude' ? "Continuous Amplitude Overlays" : "Pitch Intonation Curves (F0)"}
+                    {activeChartTab === 'amplitude' 
+                      ? "Continuous Amplitude Overlays" 
+                      : activeChartTab === 'pitch' 
+                        ? "Pitch Intonation Curves (F0)" 
+                        : "Fluency & Phrasing Dashboard"}
                   </h2>
                 </div>
                 
@@ -219,6 +223,16 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                   >
                     PITCH (F0)
                   </button>
+                  <button
+                    onClick={() => handleTabChange('fluency')}
+                    className={`px-3 py-1 text-[9px] font-mono rounded-md font-bold transition-all cursor-pointer ${
+                      activeChartTab === 'fluency'
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                        : 'text-zinc-500 border border-transparent hover:text-zinc-400'
+                    }`}
+                  >
+                    FLUENCY & PACE
+                  </button>
                 </div>
               </div>
 
@@ -230,12 +244,12 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                       <span className="text-zinc-500">Grey Dashed = Native reference</span>
                       <span className="text-[#10b981]">Green Solid = Your voice spectrum</span>
                     </>
-                  ) : (
+                  ) : activeChartTab === 'pitch' ? (
                     <>
                       <span className="text-zinc-500">Indigo Dashed = Native F0 intonation</span>
                       <span className="text-[#10b981]">Green Solid = Your pitch contour</span>
                     </>
-                  )}
+                  ) : null}
                 </div>
 
                 {activeChartTab === 'amplitude' ? (
@@ -278,7 +292,7 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                       <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 2</span>
                     </button>
                   </div>
-                ) : (
+                ) : activeChartTab === 'pitch' ? (
                   <div className="w-full h-full relative flex items-end">
                     {/* Native Pitch curve (Dashed Indigo) */}
                     <svg className="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
@@ -367,6 +381,94 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                         </button>
                       </div>
                     )}
+
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-between gap-4 p-1 text-left z-10 select-none">
+                    
+                    {/* Left: Radar Chart (110x110px) */}
+                    <div className="w-[110px] h-[110px] shrink-0 relative flex items-center justify-center bg-zinc-950 border border-zinc-900 rounded-xl p-1.5 shadow-inner">
+                      <svg className="w-full h-full overflow-visible" viewBox="0 0 110 110">
+                        {/* Pentagon Grid lines */}
+                        <polygon points="55,15 93,43 78.5,87.4 31.5,87.4 17,43" fill="none" stroke="#27272a" strokeWidth="1" />
+                        <polygon points="55,33 76,48.4 68,72.8 42,72.8 34,48.4" fill="none" stroke="#1f1f23" strokeWidth="0.8" />
+                        
+                        {/* Axes lines */}
+                        <line x1="55" y1="55" x2="55" y2="15" stroke="#27272a" strokeWidth="0.8" strokeDasharray="1.5 1" />
+                        <line x1="55" y1="55" x2="93" y2="43" stroke="#27272a" strokeWidth="0.8" strokeDasharray="1.5 1" />
+                        <line x1="55" y1="55" x2="78.5" y2="87.4" stroke="#27272a" strokeWidth="0.8" strokeDasharray="1.5 1" />
+                        <line x1="55" y1="55" x2="31.5" y2="87.4" stroke="#27272a" strokeWidth="0.8" strokeDasharray="1.5 1" />
+                        <line x1="55" y1="55" x2="17" y2="43" stroke="#27272a" strokeWidth="0.8" strokeDasharray="1.5 1" />
+
+                        {/* User Performance polygon */}
+                        <polygon 
+                          points="55,17.4 88.9,44 76.4,84.4 33.4,84.4 18.9,43.3" 
+                          fill="rgba(245, 158, 11, 0.12)" 
+                          stroke="#f59e0b" 
+                          strokeWidth="1.8" 
+                          filter="url(#neonGlowAmber)"
+                        />
+                        
+                        {/* Axes labels */}
+                        <text x="55" y="11" fill="#71717a" fontSize="6.5" textAnchor="middle" fontWeight="bold" fontFamily="monospace">PRN</text>
+                        <text x="96" y="44" fill="#71717a" fontSize="6.5" textAnchor="start" fontWeight="bold" fontFamily="monospace">LSN</text>
+                        <text x="81" y="93" fill="#71717a" fontSize="6.5" textAnchor="start" fontWeight="bold" fontFamily="monospace">INT</text>
+                        <text x="29" y="93" fill="#71717a" fontSize="6.5" textAnchor="end" fontWeight="bold" fontFamily="monospace">FLN</text>
+                        <text x="14" y="44" fill="#71717a" fontSize="6.5" textAnchor="end" fontWeight="bold" fontFamily="monospace">PAC</text>
+                      </svg>
+                    </div>
+
+                    {/* Right: Speech Rhythm & Statistics */}
+                    <div className="flex-1 h-full flex flex-col justify-between py-1 gap-2.5">
+                      
+                      {/* Syllable-level rhythm matching curve */}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between items-center text-[8px] font-mono text-zinc-500">
+                          <span>SPEECH RHYTHM MATCHING</span>
+                          <span className="text-amber-400 font-bold">STEADY RHYTHM</span>
+                        </div>
+                        <div className="w-full h-[40px] bg-zinc-950/40 border border-zinc-900 rounded-lg p-1 overflow-hidden relative">
+                          <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                            {/* Native rhythm beats (dashed gray) */}
+                            <path 
+                              d="M 0 22 Q 8 4, 16 22 Q 24 8, 32 22 Q 40 4, 48 22 Q 56 6, 64 22 Q 72 4, 80 22 Q 88 12, 96 22" 
+                              fill="none" 
+                              stroke="#52525b" 
+                              strokeWidth="1" 
+                              strokeDasharray="2 1.5" 
+                            />
+                            {/* User rhythm beats (solid amber) */}
+                            <path 
+                              d="M 0 22 Q 7 3, 15.5 22 Q 25 9, 33 22 Q 41.5 3, 49 22 Q 57 7, 65 22 Q 71.5 3, 79 22 Q 87 11, 96 22" 
+                              fill="none" 
+                              stroke="#f59e0b" 
+                              strokeWidth="1.5" 
+                              filter="url(#neonGlowAmber)" 
+                            />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Stats grid */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-zinc-950/50 border border-zinc-900 rounded-lg p-1.5 text-left flex flex-col gap-0.5 shadow-sm">
+                          <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-wider">Speed</span>
+                          <span className="text-xs font-bold text-zinc-100 font-mono">142 WPM</span>
+                          <span className="text-[7px] text-amber-400 font-semibold">Optimal</span>
+                        </div>
+                        <div className="bg-zinc-950/50 border border-zinc-900 rounded-lg p-1.5 text-left flex flex-col gap-0.5 shadow-sm">
+                          <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-wider">Pauses</span>
+                          <span className="text-xs font-bold text-zinc-100 font-mono">1 Pause</span>
+                          <span className="text-[7px] text-amber-400 font-semibold">Natural</span>
+                        </div>
+                        <div className="bg-zinc-950/50 border border-zinc-900 rounded-lg p-1.5 text-left flex flex-col gap-0.5 shadow-sm">
+                          <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-wider">Consistency</span>
+                          <span className="text-xs font-bold text-zinc-100 font-mono">93.5%</span>
+                          <span className="text-[7px] text-amber-400 font-semibold">Excellent</span>
+                        </div>
+                      </div>
+
+                    </div>
 
                   </div>
                 )}
