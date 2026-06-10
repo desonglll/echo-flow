@@ -1,13 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
 import type { WordItem } from '../types';
-import { DictionaryPopover } from './DictionaryPopover';
 
 interface DiagnosticsHubProps {
   selectedWordIndex: number | null;
-  popoverDirection: 'top' | 'bottom';
-  popoverPosition: { top: number; left: number; height: number } | null;
-  popoverCardId: number | null;
   diagnosticSlideX: number;
   scoreCount: number;
   metricsVisible: boolean;
@@ -15,10 +11,6 @@ interface DiagnosticsHubProps {
   activeAudioWord: number | null;
   handleWordClick: (e: React.MouseEvent<HTMLButtonElement>, item: WordItem, index: number, cardId: number) => void;
   playWordAudio: (word: WordItem, index: number, source: 'native' | 'user') => void;
-  setSelectedWordIndex: (val: number | null) => void;
-  setPopoverPosition: (pos: { top: number; left: number; height: number } | null) => void;
-  setPopoverCardId: (id: number | null) => void;
-  activeSection: number;
   nativeReferencePath: string;
   userResultPath: string;
   hasFinishedRecording: boolean;
@@ -26,9 +18,6 @@ interface DiagnosticsHubProps {
 
 export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
   selectedWordIndex,
-  popoverDirection,
-  popoverPosition,
-  popoverCardId,
   diagnosticSlideX,
   scoreCount,
   metricsVisible,
@@ -36,19 +25,24 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
   activeAudioWord,
   handleWordClick,
   playWordAudio,
-  setSelectedWordIndex,
-  setPopoverPosition,
-  setPopoverCardId,
-  activeSection,
   nativeReferencePath,
   userResultPath,
   hasFinishedRecording
 }) => {
+  const [isLargeScreen, setIsLargeScreen] = useState(true);
+
+  useEffect(() => {
+    const checkScreen = () => setIsLargeScreen(window.innerWidth >= 1024);
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
+
   if (!hasFinishedRecording) return null;
 
   return (
-    <div className="h-[200vh] relative w-full border-b border-[#222226]/20">
-      <div className="sticky top-0 h-screen w-full flex items-center justify-center px-12 overflow-hidden">
+    <div className="h-auto lg:h-[200vh] relative w-full border-b border-[#222226]/20 py-12 lg:py-0">
+      <div className="relative lg:sticky lg:top-0 h-auto lg:h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-12 py-6 lg:py-0 overflow-visible lg:overflow-hidden">
         
         {/* Grid Container for Left and Right Panels */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-[1400px] items-center relative">
@@ -131,33 +125,15 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
               })}
             </div>
 
-            {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
-            {selectedWordIndex !== null && popoverPosition && activeSection === 2 && popoverCardId === 3 && (
-              <DictionaryPopover
-                word={transcriptWords[selectedWordIndex]}
-                popoverDirection={popoverDirection}
-                popoverPosition={popoverPosition}
-                onClose={() => {
-                  setSelectedWordIndex(null);
-                  setPopoverPosition(null);
-                  setPopoverCardId(null);
-                }}
-                onPlayAudio={(source) => {
-                  setSelectedWordIndex(null);
-                  setPopoverPosition(null);
-                  playWordAudio(transcriptWords[selectedWordIndex!], selectedWordIndex!, source);
-                }}
-              />
-            )}
           </div>
 
           {/* Right Column - Amplitude overlays & Scores (originally Step 3) */}
           <div 
             style={{ 
-              transform: `translateX(${diagnosticSlideX}%)`,
+              transform: isLargeScreen ? `translateX(${diagnosticSlideX}%)` : 'none',
               transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
-            className="h-[450px]"
+            className="h-[450px] w-full"
           >
             <div className="premium-card premium-card-emerald rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-full">
               <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 shrink-0">
@@ -269,24 +245,6 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                 </div>
               </div>
 
-              {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
-              {selectedWordIndex !== null && popoverPosition && activeSection === 2 && popoverCardId === 4 && (
-                <DictionaryPopover
-                  word={transcriptWords[selectedWordIndex]}
-                  popoverDirection={popoverDirection}
-                  popoverPosition={popoverPosition}
-                  onClose={() => {
-                    setSelectedWordIndex(null);
-                    setPopoverPosition(null);
-                    setPopoverCardId(null);
-                  }}
-                  onPlayAudio={(source) => {
-                    setSelectedWordIndex(null);
-                    setPopoverPosition(null);
-                    playWordAudio(transcriptWords[selectedWordIndex!], selectedWordIndex!, source);
-                  }}
-                />
-              )}
             </div>
           </div>
 

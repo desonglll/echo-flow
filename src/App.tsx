@@ -13,6 +13,7 @@ import { NavigationDots } from './components/NavigationDots';
 import { Hero } from './components/Hero';
 import { PracticeArena } from './components/PracticeArena';
 import { DiagnosticsHub } from './components/DiagnosticsHub';
+import { DictionaryPopover } from './components/DictionaryPopover';
 
 export default function App() {
   // Scrollytelling active state tracker
@@ -72,32 +73,28 @@ export default function App() {
       setPopoverCardId(null);
     } else {
       const buttonRect = e.currentTarget.getBoundingClientRect();
-      const cardElement = e.currentTarget.closest('.premium-card');
+      const buttonCenterLeft = buttonRect.left + buttonRect.width / 2;
+      const buttonTop = buttonRect.top;
+      const buttonHeight = buttonRect.height;
+      const viewportHeight = window.innerHeight;
       
-      if (cardElement) {
-        const cardRect = cardElement.getBoundingClientRect();
-        const cardWidth = cardRect.width;
-        const relativeTop = buttonRect.top - cardRect.top;
-        let relativeLeft = buttonRect.left - cardRect.left + buttonRect.width / 2;
-        
-        // Clamp relativeLeft to prevent popover from shifting off the card
-        const minLeft = 160;
-        const maxLeft = cardWidth - 160;
-        relativeLeft = Math.max(minLeft, Math.min(maxLeft, relativeLeft));
-        
-        // If the word is high up, show popover below it, otherwise show above
-        const showBelow = relativeTop < 170;
-        setPopoverDirection(showBelow ? 'bottom' : 'top');
-        setPopoverPosition({ top: relativeTop, left: relativeLeft, height: buttonRect.height });
-        setSelectedWordIndex(index);
-        setPopoverCardId(cardId);
-      }
+      // If the word is in the top half of the screen, show below. Otherwise show above.
+      const showBelow = buttonTop < viewportHeight / 2;
+      setPopoverDirection(showBelow ? 'bottom' : 'top');
+      setPopoverPosition({ top: buttonTop, left: buttonCenterLeft, height: buttonHeight });
+      setSelectedWordIndex(index);
+      setPopoverCardId(cardId);
     }
   };
 
   // Scroll tracker logic
   useEffect(() => {
     const handleScroll = () => {
+      // Close popover on scroll to prevent detaching
+      setSelectedWordIndex(null);
+      setPopoverPosition(null);
+      setPopoverCardId(null);
+
       const scrollTop = window.scrollY;
       const height = window.innerHeight;
       
@@ -376,9 +373,6 @@ export default function App() {
           currentActiveWordIndex={currentActiveWordIndex}
           activeAudioWord={activeAudioWord}
           selectedWordIndex={selectedWordIndex}
-          popoverDirection={popoverDirection}
-          popoverPosition={popoverPosition}
-          popoverCardId={popoverCardId}
           slideTranslateX={slideTranslateX}
           wavePoints={wavePoints}
           analyzingProgress={analyzingProgress}
@@ -386,11 +380,6 @@ export default function App() {
           transcriptWords={transcriptWords}
           handleWordClick={handleWordClick}
           handleMainActionClick={handleMainActionClick}
-          playWordAudio={playWordAudio}
-          setSelectedWordIndex={setSelectedWordIndex}
-          setPopoverPosition={setPopoverPosition}
-          setPopoverCardId={setPopoverCardId}
-          activeSection={activeSection}
           nativeReferencePath={nativeReferencePath}
           userResultPath={userResultPath}
         />
@@ -398,9 +387,6 @@ export default function App() {
         {/* SECTION 4: AI Feedback Hub */}
         <DiagnosticsHub
           selectedWordIndex={selectedWordIndex}
-          popoverDirection={popoverDirection}
-          popoverPosition={popoverPosition}
-          popoverCardId={popoverCardId}
           diagnosticSlideX={diagnosticSlideX}
           scoreCount={scoreCount}
           metricsVisible={metricsVisible}
@@ -408,16 +394,31 @@ export default function App() {
           activeAudioWord={activeAudioWord}
           handleWordClick={handleWordClick}
           playWordAudio={playWordAudio}
-          setSelectedWordIndex={setSelectedWordIndex}
-          setPopoverPosition={setPopoverPosition}
-          setPopoverCardId={setPopoverCardId}
-          activeSection={activeSection}
           nativeReferencePath={nativeReferencePath}
           userResultPath={userResultPath}
           hasFinishedRecording={hasFinishedRecording}
         />
 
       </div>
+
+      {/* Global Dictionary Popover */}
+      {selectedWordIndex !== null && popoverPosition && (
+        <DictionaryPopover
+          word={transcriptWords[selectedWordIndex]}
+          popoverDirection={popoverDirection}
+          popoverPosition={popoverPosition}
+          onClose={() => {
+            setSelectedWordIndex(null);
+            setPopoverPosition(null);
+            setPopoverCardId(null);
+          }}
+          onPlayAudio={(source) => {
+            setSelectedWordIndex(null);
+            setPopoverPosition(null);
+            playWordAudio(transcriptWords[selectedWordIndex!], selectedWordIndex!, source);
+          }}
+        />
+      )}
     </div>
   );
 }

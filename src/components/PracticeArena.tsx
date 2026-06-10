@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mic, RotateCcw } from 'lucide-react';
 import type { WordItem } from '../types';
 import { parseTimestamp, getPathFromPoints } from '../utils/audio';
-import { DictionaryPopover } from './DictionaryPopover';
 
 interface PracticeArenaProps {
   shadowState: 'ready' | 'recording' | 'analyzing' | 'result';
@@ -11,9 +10,6 @@ interface PracticeArenaProps {
   currentActiveWordIndex: number;
   activeAudioWord: number | null;
   selectedWordIndex: number | null;
-  popoverDirection: 'top' | 'bottom';
-  popoverPosition: { top: number; left: number; height: number } | null;
-  popoverCardId: number | null;
   slideTranslateX: number;
   wavePoints: number[];
   analyzingProgress: number;
@@ -21,11 +17,6 @@ interface PracticeArenaProps {
   transcriptWords: WordItem[];
   handleWordClick: (e: React.MouseEvent<HTMLButtonElement>, item: WordItem, index: number, cardId: number) => void;
   handleMainActionClick: () => void;
-  playWordAudio: (word: WordItem, index: number, source: 'native' | 'user') => void;
-  setSelectedWordIndex: (val: number | null) => void;
-  setPopoverPosition: (pos: { top: number; left: number; height: number } | null) => void;
-  setPopoverCardId: (id: number | null) => void;
-  activeSection: number;
   nativeReferencePath: string;
   userResultPath: string;
 }
@@ -37,9 +28,6 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   currentActiveWordIndex,
   activeAudioWord,
   selectedWordIndex,
-  popoverDirection,
-  popoverPosition,
-  popoverCardId,
   slideTranslateX,
   wavePoints,
   analyzingProgress,
@@ -47,17 +35,42 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   transcriptWords,
   handleWordClick,
   handleMainActionClick,
-  playWordAudio,
-  setSelectedWordIndex,
-  setPopoverPosition,
-  setPopoverCardId,
-  activeSection,
   nativeReferencePath,
   userResultPath
 }) => {
+  const [isLargeScreen, setIsLargeScreen] = useState(true);
+  const transcriptContainerRef = React.useRef<HTMLDivElement>(null);
+  const activeWordRef = React.useRef<HTMLSpanElement>(null);
+  const activeIdx = shadowState === 'recording' ? currentActiveWordIndex : activeAudioWord;
+
+  useEffect(() => {
+    const checkScreen = () => setIsLargeScreen(window.innerWidth >= 1024);
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
+
+  useEffect(() => {
+    if (activeIdx !== null && activeIdx !== -1 && transcriptContainerRef.current && activeWordRef.current) {
+      const container = transcriptContainerRef.current;
+      const element = activeWordRef.current;
+      
+      const containerHeight = container.clientHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.clientHeight;
+      
+      const targetScrollTop = elementTop - (containerHeight / 2) + (elementHeight / 2);
+      
+      container.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        behavior: 'smooth'
+      });
+    }
+  }, [activeIdx]);
+
   return (
-    <div className="h-[200vh] relative w-full border-b border-[#222226]/20">
-      <div className="sticky top-0 h-screen w-full flex items-center justify-center px-12 overflow-hidden">
+    <div className="h-auto lg:h-[200vh] relative w-full border-b border-[#222226]/20 py-12 lg:py-0">
+      <div className="relative lg:sticky lg:top-0 h-auto lg:h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-12 py-6 lg:py-0 overflow-visible lg:overflow-hidden">
         
         {/* Grid Container for Left Content and Right sliding-in recorder */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-[1400px] items-center relative">
@@ -94,8 +107,8 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               )}
             </div>
 
-            {/* Podcast Timed Transcript Layout (Completely scrollbar-free and non-scrollable) */}
-            <div className="flex-1 py-2 overflow-hidden flex items-start gap-4 pr-2 select-text">
+            {/* Podcast Timed Transcript Layout */}
+            <div ref={transcriptContainerRef} className="flex-1 py-2 overflow-y-auto no-scrollbar flex items-start gap-4 pr-2 select-text max-h-[280px] relative">
               
               {/* Podcasting Line Timestamps */}
               <div className="flex flex-col gap-[34px] text-[11px] font-mono text-zinc-400 w-12 pt-1 shrink-0 border-r border-zinc-800 pr-3.5">
@@ -122,7 +135,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                     
                     if (isActive) {
                       // Currently speaking word: active glow with spring pop
-                      textClass = "text-white bg-zinc-800 px-2 py-0.5 rounded cursor-pointer ring-2 ring-emerald-450 shadow-[0_0_15px_rgba(16,185,129,0.35)] scale-105 -translate-y-0.5 font-bold transition-all duration-300 ease-out transform inline-block";
+                      textClass = "text-white bg-zinc-850 px-2 py-0.5 rounded cursor-pointer ring-2 ring-emerald-450 shadow-[0_0_15px_rgba(16,185,129,0.35)] font-bold transition-all duration-300 ease-out inline-block animate-active-pop";
                     } else if (isSpoken) {
                       // Already spoken: accuracy color coding (Duolingo-inspired high contrast)
                       if (item.accuracy === 'good') {
@@ -147,7 +160,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                   }
 
                   return (
-                    <span key={idx} className="relative inline-block mx-0.5">
+                    <span key={idx} ref={idx === activeIdx ? activeWordRef : null} className="relative inline-block mx-0.5">
                       <button
                         onClick={(e) => handleWordClick(e, item, idx, 1)}
                         disabled={shadowState === 'recording'}
@@ -155,7 +168,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                       >
                         {item.text}
                         {shadowState === 'recording' && idx === currentActiveWordIndex && (
-                          <span className="text-[#10b981] ml-0.5 animate-cursor font-semibold">|</span>
+                          <span className="relative inline-flex h-2 w-2 ml-1">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10b981]"></span>
+                          </span>
                         )}
                       </button>
 
@@ -174,10 +190,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
             {/* Live ASR Telemetry Console */}
             {shadowState === 'recording' ? (
-              <div className="mt-2 bg-[#121214]/90 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-1.5 font-mono text-left animate-slide-up shrink-0">
+              <div className="mt-2 bg-[#121214]/90 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2 font-sans text-left animate-slide-up shrink-0">
                 <div className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-extrabold">ASR Engine Telemetry Log</span>
-                  <span className="text-[11px] text-[#10b981] font-bold flex items-center gap-1.5">
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-extrabold font-mono">ASR Engine Live Feed</span>
+                  <span className="text-[11px] text-[#10b981] font-bold flex items-center gap-1.5 font-mono">
                     <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full inline-block animate-pulse" />
                     <span className="text-zinc-300">STREAMING DECODE</span>
                     <div className="flex items-center gap-0.5 h-2.5">
@@ -187,18 +203,26 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                     </div>
                   </span>
                 </div>
-                <div className="text-[12px] text-zinc-100 leading-normal flex items-start gap-1.5">
-                  <span className="text-[#10b981] shrink-0 font-bold">&gt;_ ASR:</span>
-                  <span className="text-zinc-100 font-medium">
-                    {currentActiveWordIndex >= 0 ? (
-                      <>
-                        {transcriptWords.slice(0, currentActiveWordIndex + 1).map(w => w.text).join(" ")}
-                        <span className="inline-block w-1.5 h-3.5 bg-[#10b981] ml-0.5 animate-cursor" />
-                      </>
-                    ) : (
-                      <span className="text-zinc-400 italic">Listening for speech tokens...</span>
-                    )}
-                  </span>
+                <div className="flex flex-wrap gap-1.5 items-center min-h-6">
+                  {currentActiveWordIndex >= 0 ? (
+                    transcriptWords.slice(0, currentActiveWordIndex + 1).map((w, wIdx) => {
+                      const isLast = wIdx === currentActiveWordIndex;
+                      return (
+                        <span 
+                          key={wIdx} 
+                          className={`px-2 py-0.5 rounded-md text-[12px] font-medium font-sans transition-all duration-300 ${
+                            isLast 
+                              ? 'bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40 shadow-[0_0_12px_rgba(16,185,129,0.25)] animate-word-pop' 
+                              : 'bg-zinc-900/60 text-zinc-300 border border-zinc-800/40'
+                          }`}
+                        >
+                          {w.text}
+                        </span>
+                      );
+                    })
+                  ) : (
+                    <span className="text-zinc-400 italic text-[12px] font-sans">Listening for speech tokens...</span>
+                  )}
                 </div>
               </div>
             ) : shadowState === 'result' ? (
@@ -213,33 +237,15 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               </div>
             )}
 
-            {/* Floating Dictionary Tooltip positioned at the card level to prevent overflow clipping */}
-            {selectedWordIndex !== null && popoverPosition && activeSection === 1 && popoverCardId === 1 && (
-              <DictionaryPopover
-                word={transcriptWords[selectedWordIndex]}
-                popoverDirection={popoverDirection}
-                popoverPosition={popoverPosition}
-                onClose={() => {
-                  setSelectedWordIndex(null);
-                  setPopoverPosition(null);
-                  setPopoverCardId(null);
-                }}
-                onPlayAudio={(source) => {
-                  setSelectedWordIndex(null);
-                  setPopoverPosition(null);
-                  playWordAudio(transcriptWords[selectedWordIndex!], selectedWordIndex!, source);
-                }}
-              />
-            )}
           </div>
 
           {/* Right Column - Recording Visualizer Console (Slides in from the right edge) */}
           <div 
             style={{ 
-              transform: `translateX(${slideTranslateX}%)`,
+              transform: isLargeScreen ? `translateX(${slideTranslateX}%)` : 'none',
               transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
-            className="h-[450px]"
+            className="h-[450px] w-full"
           >
             <div className="premium-card premium-card-emerald rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-full">
               
