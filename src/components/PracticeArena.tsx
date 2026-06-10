@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, RotateCcw } from 'lucide-react';
+import { Mic, RotateCcw, Volume2, Play } from 'lucide-react';
 import type { WordItem } from '../types';
 import { parseTimestamp, getPathFromPoints } from '../utils/audio';
 
@@ -19,6 +19,9 @@ interface PracticeArenaProps {
   handleMainActionClick: () => void;
   nativeReferencePath: string;
   userResultPath: string;
+  playNativeSentence: () => void;
+  playUserRecording: () => void;
+  userAudioUrl: string | null;
 }
 
 export const PracticeArena: React.FC<PracticeArenaProps> = ({
@@ -36,7 +39,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   handleWordClick,
   handleMainActionClick,
   nativeReferencePath,
-  userResultPath
+  userResultPath,
+  playNativeSentence,
+  playUserRecording,
+  userAudioUrl
 }) => {
   const [isLargeScreen, setIsLargeScreen] = useState(true);
   const transcriptContainerRef = React.useRef<HTMLDivElement>(null);
@@ -330,44 +336,72 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
               {/* Recorder Control Dial Button */}
               <div className="flex flex-col items-center gap-3">
-                <div className="relative">
-                  {shadowState === 'recording' && (
-                    <div className="absolute -inset-4 rounded-full border border-emerald-500/10 ring-glow-active" />
+                <div className="flex items-center gap-4">
+                  {shadowState === 'result' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playNativeSentence();
+                      }}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                      title="Play Native Sentence"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </button>
                   )}
-                  <button
-                    onClick={handleMainActionClick}
-                    className={`w-16 h-16 rounded-full flex flex-col items-center justify-center border transition-all duration-500 relative z-10 focus:outline-none cursor-pointer group ${
-                      shadowState === 'ready'
-                        ? 'bg-zinc-900 border-zinc-800/80 hover:border-emerald-500/40 text-zinc-400 hover:text-white shadow-lg'
-                        : shadowState === 'recording'
-                          ? 'bg-zinc-950 border-emerald-500 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
-                          : shadowState === 'analyzing'
-                            ? 'bg-zinc-950 border-zinc-850 text-zinc-650'
-                            : 'bg-zinc-900 border-emerald-500/50 text-[#10b981]'
-                    }`}
-                  >
-                    {shadowState === 'ready' && (
-                      <>
-                        <Mic className="w-5 h-5 text-zinc-400 group-hover:text-white" />
-                        <span className="text-[7px] font-mono tracking-wider text-zinc-500 mt-0.5 uppercase font-bold">SPACE</span>
-                      </>
-                    )}
+
+                  <div className="relative">
                     {shadowState === 'recording' && (
-                      <>
-                        <div className="w-2.5 h-2.5 bg-emerald-400 rounded-sm animate-pulse" />
-                        <span className="text-[7px] font-mono tracking-wider text-emerald-400 mt-0.5 uppercase font-bold">STOP</span>
-                      </>
+                      <div className="absolute -inset-4 rounded-full border border-emerald-500/10 ring-glow-active" />
                     )}
-                    {shadowState === 'analyzing' && (
-                      <span className="text-[10px] font-mono text-[#10b981] font-bold">{analyzingProgress}%</span>
-                    )}
-                    {shadowState === 'result' && (
-                      <>
-                        <RotateCcw className="w-5 h-5" />
-                        <span className="text-[7px] font-mono tracking-wider text-emerald-400 mt-0.5 uppercase font-bold">RETRY</span>
-                      </>
-                    )}
-                  </button>
+                    <button
+                      onClick={handleMainActionClick}
+                      className={`w-16 h-16 rounded-full flex flex-col items-center justify-center border transition-all duration-500 relative z-10 focus:outline-none cursor-pointer group ${
+                        shadowState === 'ready'
+                          ? 'bg-zinc-900 border-zinc-800/80 hover:border-emerald-500/40 text-zinc-400 hover:text-white shadow-lg'
+                          : shadowState === 'recording'
+                            ? 'bg-zinc-950 border-emerald-500 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
+                            : shadowState === 'analyzing'
+                              ? 'bg-zinc-950 border-zinc-850 text-zinc-650'
+                              : 'bg-zinc-900 border-emerald-500/50 text-[#10b981]'
+                      }`}
+                    >
+                      {shadowState === 'ready' && (
+                        <>
+                          <Mic className="w-5 h-5 text-zinc-400 group-hover:text-white" />
+                          <span className="text-[7px] font-mono tracking-wider text-zinc-500 mt-0.5 uppercase font-bold">SPACE</span>
+                        </>
+                      )}
+                      {shadowState === 'recording' && (
+                        <>
+                          <div className="w-2.5 h-2.5 bg-emerald-400 rounded-sm animate-pulse" />
+                          <span className="text-[7px] font-mono tracking-wider text-emerald-400 mt-0.5 uppercase font-bold">STOP</span>
+                        </>
+                      )}
+                      {shadowState === 'analyzing' && (
+                        <span className="text-[10px] font-mono text-[#10b981] font-bold">{analyzingProgress}%</span>
+                      )}
+                      {shadowState === 'result' && (
+                        <>
+                          <RotateCcw className="w-5 h-5" />
+                          <span className="text-[7px] font-mono tracking-wider text-emerald-400 mt-0.5 uppercase font-bold">RETRY</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {shadowState === 'result' && userAudioUrl && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playUserRecording();
+                      }}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-950/20 border border-emerald-500/30 hover:border-emerald-500/50 text-[#10b981] transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                      title="Play Your Attempt"
+                    >
+                      <Play className="w-4 h-4 fill-current ml-0.5" />
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex flex-col items-center text-center">

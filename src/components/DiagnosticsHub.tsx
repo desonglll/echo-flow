@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Volume2, Play, Info } from 'lucide-react';
 import type { WordItem } from '../types';
+import type { PitchMarker } from '../utils/pitch';
 
 interface DiagnosticsHubProps {
   selectedWordIndex: number | null;
@@ -14,6 +15,12 @@ interface DiagnosticsHubProps {
   nativeReferencePath: string;
   userResultPath: string;
   hasFinishedRecording: boolean;
+  playNativeSentence: () => void;
+  playUserRecording: () => void;
+  userAudioUrl: string | null;
+  nativePitchPath: string;
+  userPitchPath: string;
+  pitchMarkers: PitchMarker[];
 }
 
 export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
@@ -27,9 +34,22 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
   playWordAudio,
   nativeReferencePath,
   userResultPath,
-  hasFinishedRecording
+  hasFinishedRecording,
+  playNativeSentence,
+  playUserRecording,
+  userAudioUrl,
+  nativePitchPath,
+  userPitchPath,
+  pitchMarkers
 }) => {
   const [isLargeScreen, setIsLargeScreen] = useState(true);
+  const [activeChartTab, setActiveChartTab] = useState<'amplitude' | 'pitch'>('amplitude');
+  const [activePitchMarkerIndex, setActivePitchMarkerIndex] = useState<number | null>(null);
+
+  const handleTabChange = (tab: 'amplitude' | 'pitch') => {
+    setActiveChartTab(tab);
+    setActivePitchMarkerIndex(null);
+  };
 
   useEffect(() => {
     const checkScreen = () => setIsLargeScreen(window.innerWidth >= 1024);
@@ -133,65 +153,223 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
               transform: isLargeScreen ? `translateX(${diagnosticSlideX}%)` : 'none',
               transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
-            className="h-[450px] w-full"
+            className="h-[450px] w-full animate-fade-in"
           >
             <div className="premium-card premium-card-emerald rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative h-full">
               <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4 shrink-0">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[9px] tracking-[0.2em] text-[#10b981] font-bold uppercase font-mono">STEP 04 / COMPARISON RESULTS</span>
-                  <h2 className="text-sm font-semibold text-zinc-300 text-left font-sans">Continuous Amplitude Overlays</h2>
+                  <h2 className="text-sm font-semibold text-zinc-300 text-left font-sans">
+                    {activeChartTab === 'amplitude' ? "Continuous Amplitude Overlays" : "Pitch Intonation Curves (F0)"}
+                  </h2>
                 </div>
-                <div className="flex items-center gap-1.5 bg-[#10b981]/5 border border-[#10b981]/25 rounded-full px-2.5 py-0.5 text-[10px] text-[#10b981] font-semibold font-mono">
-                  OVERALL MATCH: {scoreCount}%
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playNativeSentence();
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-300 hover:text-white font-mono transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    title="Play Native Sentence"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                    <span>Native</span>
+                  </button>
+                  {userAudioUrl && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playUserRecording();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-500/30 text-[10px] text-[#10b981] font-mono transition-all cursor-pointer hover:scale-105 active:scale-95"
+                      title="Play Your Attempt"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                      <span>You</span>
+                    </button>
+                  )}
+                  <span className="flex items-center gap-1.5 bg-[#10b981]/5 border border-[#10b981]/25 rounded-full px-2.5 py-1 text-[10px] text-[#10b981] font-bold font-mono">
+                    OVERALL MATCH: {scoreCount}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Tab Selector */}
+              <div className="flex items-center justify-between border-b border-zinc-800/20 pb-3 shrink-0">
+                <span className="text-[10px] text-zinc-400 font-medium font-sans">Select analysis visualization:</span>
+                <div className="flex bg-zinc-950 p-0.5 rounded-lg border border-zinc-900">
+                  <button
+                    onClick={() => handleTabChange('amplitude')}
+                    className={`px-3 py-1 text-[9px] font-mono rounded-md font-bold transition-all cursor-pointer ${
+                      activeChartTab === 'amplitude'
+                        ? 'bg-emerald-500/15 text-[#10b981] border border-emerald-500/20'
+                        : 'text-zinc-500 border border-transparent hover:text-zinc-400'
+                    }`}
+                  >
+                    AMPLITUDE
+                  </button>
+                  <button
+                    onClick={() => handleTabChange('pitch')}
+                    className={`px-3 py-1 text-[9px] font-mono rounded-md font-bold transition-all cursor-pointer ${
+                      activeChartTab === 'pitch'
+                        ? 'bg-blue-500/15 text-blue-400 border border-blue-500/20'
+                        : 'text-zinc-500 border border-transparent hover:text-zinc-400'
+                    }`}
+                  >
+                    PITCH (F0)
+                  </button>
                 </div>
               </div>
 
               {/* Overlapping wave box */}
               <div className="h-[150px] w-full bg-zinc-950 border border-zinc-800/60 rounded-xl relative flex flex-col justify-end p-4 overflow-hidden shrink-0">
-                <div className="absolute top-3 left-3 flex flex-col gap-0.5 text-[9px] font-mono text-zinc-500 text-left">
-                  <span className="text-zinc-500">Grey Dashed = Native reference</span>
-                  <span className="text-[#10b981]">Green Solid = Your voice spectrum</span>
+                <div className="absolute top-3 left-3 flex flex-col gap-0.5 text-[9px] font-mono text-zinc-500 text-left z-10">
+                  {activeChartTab === 'amplitude' ? (
+                    <>
+                      <span className="text-zinc-500">Grey Dashed = Native reference</span>
+                      <span className="text-[#10b981]">Green Solid = Your voice spectrum</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-zinc-500">Indigo Dashed = Native F0 intonation</span>
+                      <span className="text-[#10b981]">Green Solid = Your pitch contour</span>
+                    </>
+                  )}
                 </div>
 
-                <div className="w-full h-full relative flex items-end">
-                  <svg className="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
-                    <path d={nativeReferencePath} fill="none" stroke="#66666f" strokeWidth="1.5" strokeDasharray="3 1.5" />
-                  </svg>
+                {activeChartTab === 'amplitude' ? (
+                  <div className="w-full h-full relative flex items-end">
+                    <svg className="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
+                      <path d={nativeReferencePath} fill="none" stroke="#66666f" strokeWidth="1.5" strokeDasharray="3 1.5" />
+                    </svg>
 
-                  <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="userResultGlowScrolly" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={`${userResultPath} L 100 24 L 0 24 Z`} fill="url(#userResultGlowScrolly)" />
-                    <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
-                    
-                    {/* Highlight correction sections */}
-                    <path d="M 34 12 L 42 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" filter="url(#neonGlowAmber)" />
-                    <path d="M 72 12 L 78 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" filter="url(#neonGlowAmber)" />
-                  </svg>
+                    <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="userResultGlowScrolly" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+                          <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path d={`${userResultPath} L 100 24 L 0 24 Z`} fill="url(#userResultGlowScrolly)" />
+                      <path d={userResultPath} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
+                      
+                      {/* Highlight correction sections */}
+                      <path d="M 34 12 L 42 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" filter="url(#neonGlowAmber)" />
+                      <path d="M 72 12 L 78 12" fill="none" stroke="#fbbf24" strokeWidth="2.5" filter="url(#neonGlowAmber)" />
+                    </svg>
 
-                  {/* Hotspot overlays */}
-                  <button 
-                    onClick={(e) => {
-                      handleWordClick(e, transcriptWords[5], 5, 4);
-                    }}
-                    className="absolute bottom-0 left-[34%] w-[8%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
-                  >
-                    <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 1</span>
-                  </button>
+                    {/* Hotspot overlays */}
+                    <button 
+                      onClick={(e) => {
+                        handleWordClick(e, transcriptWords[5], 5, 4);
+                      }}
+                      className="absolute bottom-0 left-[34%] w-[8%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
+                    >
+                      <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 1</span>
+                    </button>
 
-                  <button 
-                    onClick={(e) => {
-                      handleWordClick(e, transcriptWords[10], 10, 4);
-                    }}
-                    className="absolute bottom-0 left-[72%] w-[6%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
-                  >
-                    <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 2</span>
-                  </button>
-                </div>
+                    <button 
+                      onClick={(e) => {
+                        handleWordClick(e, transcriptWords[10], 10, 4);
+                      }}
+                      className="absolute bottom-0 left-[72%] w-[6%] h-full border-x border-t border-dashed border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.04] transition-colors flex items-start justify-center pt-2 cursor-pointer focus:outline-none group/gate"
+                    >
+                      <span className="text-[8px] font-mono text-[#fbbf24] bg-zinc-950 border border-amber-500/20 px-1 rounded-sm uppercase font-semibold">LINK 2</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full h-full relative flex items-end">
+                    {/* Native Pitch curve (Dashed Indigo) */}
+                    <svg className="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 100 24" preserveAspectRatio="none">
+                      <path d={nativePitchPath} fill="none" stroke="#818cf8" strokeWidth="1.5" strokeDasharray="3 1.5" />
+                    </svg>
+
+                    {/* User Pitch curve (Solid green/blue with neon glow) */}
+                    <svg className="w-full h-full" viewBox="0 0 100 24" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="userPitchGlow" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity="0.1" />
+                          <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path d={`${userPitchPath} L 100 24 L 0 24 Z`} fill="url(#userPitchGlow)" />
+                      <path d={userPitchPath} fill="none" stroke="#10b981" strokeWidth="2" filter="url(#neonGlowEmerald)" />
+                    </svg>
+
+                    {/* Interactive Marker Dots overlay */}
+                    {pitchMarkers.map((marker, mIdx) => {
+                      const isHovered = activePitchMarkerIndex === mIdx;
+                      
+                      let dotColor = "bg-[#10b981] border-[#10b981]/40";
+                      let textColor = "text-[#10b981]";
+                      
+                      if (marker.type === 'flat') {
+                        dotColor = "bg-[#fbbf24] border-[#fbbf24]/40 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.5)]";
+                        textColor = "text-[#fbbf24]";
+                      } else if (marker.type === 'low' || marker.type === 'high') {
+                        dotColor = "bg-[#ef4444] border-[#ef4444]/40 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]";
+                        textColor = "text-[#ef4444]";
+                      } else if (marker.type === 'correct') {
+                        dotColor = "bg-emerald-500 border-emerald-500/30";
+                        textColor = "text-emerald-400";
+                      }
+
+                      return (
+                        <div
+                          key={mIdx}
+                          style={{
+                            position: 'absolute',
+                            left: `${marker.x}%`,
+                            top: `${(marker.y / 24) * 100}%`,
+                            transform: 'translate(-50%, -50%)',
+                            zIndex: 20
+                          }}
+                          className="group"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActivePitchMarkerIndex(activePitchMarkerIndex === mIdx ? null : mIdx);
+                            }}
+                            className={`w-3.5 h-3.5 rounded-full border-[3px] ${dotColor} cursor-pointer hover:scale-125 hover:border-white transition-all focus:outline-none ${isHovered ? 'scale-125 border-white ring-2 ring-emerald-500/50' : ''}`}
+                            title={marker.text}
+                          />
+                          
+                          {/* Hover Label */}
+                          <span className={`absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-mono font-bold ${textColor} bg-zinc-950 px-1 rounded border border-zinc-800/80 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md whitespace-nowrap`}>
+                            {marker.text}
+                          </span>
+                        </div>
+                      );
+                    })}
+
+                    {/* Active tooltip popover overlay */}
+                    {activePitchMarkerIndex !== null && pitchMarkers[activePitchMarkerIndex] && (
+                      <div className="absolute inset-x-2 bottom-2 bg-zinc-950/95 border border-zinc-800 rounded-xl p-3 backdrop-blur-md z-30 shadow-2xl flex items-start gap-2.5 text-left animate-fade-in">
+                        <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 flex flex-col gap-0.5">
+                          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider">
+                            Intonation Advice • {pitchMarkers[activePitchMarkerIndex].text}
+                          </span>
+                          <p className="text-[11px] text-zinc-200 font-medium leading-relaxed">
+                            {pitchMarkers[activePitchMarkerIndex].tip}
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActivePitchMarkerIndex(null);
+                          }}
+                          className="text-zinc-500 hover:text-white font-bold text-xs focus:outline-none px-1 cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+                )}
               </div>
 
               {/* Progress bars metrics */}

@@ -5,6 +5,7 @@ import './App.css';
 import type { WordItem } from './types';
 import { transcriptWords } from './constants/transcript';
 import { playSynthSound, parseTimestamp } from './utils/audio';
+import { generatePitchData } from './utils/pitch';
 
 // Components
 import { GlowFilters } from './components/GlowFilters';
@@ -123,6 +124,47 @@ export default function App() {
   
   // Analyzing state sub-text updates
   const [analyzingMessage, setAnalyzingMessage] = useState<string>("Analyzing voice alignment...");
+
+  // Voice recording & TTS states/refs
+  const [userAudioUrl, setUserAudioUrl] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    return () => {
+      if (userAudioUrl) {
+        URL.revokeObjectURL(userAudioUrl);
+      }
+    };
+  }, [userAudioUrl]);
+
+  // Play native sentence via SpeechSynthesis
+  const playNativeSentence = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const sentenceText = activeTranscriptWords.map(w => w.text).join(" ");
+      const utterance = new SpeechSynthesisUtterance(sentenceText);
+      const voices = window.speechSynthesis.getVoices();
+      const usVoice = voices.find(voice => voice.lang.includes('en-US') && voice.name.toLowerCase().includes('google'))
+        || voices.find(voice => voice.lang.includes('en-US'))
+        || voices.find(voice => voice.lang.startsWith('en'));
+      if (usVoice) {
+        utterance.voice = usVoice;
+      }
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Play recorded user voice
+  const playUserRecording = () => {
+    if (userAudioUrl) {
+      const audio = new Audio(userAudioUrl);
+      audio.play().catch(err => {
+        console.error("Failed to play user recording:", err);
+      });
+    }
+  };
 
   // Capture mouse move for dynamic spotlight glow
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -261,6 +303,11 @@ export default function App() {
       setRecordingMillis(0);
       setWavePoints(Array.from({ length: 30 }, () => 12));
       setIsGenerating(false);
+
+      if (userAudioUrl) {
+        URL.revokeObjectURL(userAudioUrl);
+      }
+      setUserAudioUrl(null);
 
       window.scrollTo({
         top: window.innerHeight,
@@ -430,10 +477,50 @@ export default function App() {
   // Handle flow transitions
   const handleMainActionClick = () => {
     if (shadowState === 'ready') {
-      playSynthSound([523.25, 659.25], 0.15, 'triangle');
-      setShadowState('recording');
-      setSelectedWordIndex(null);
+      if (userAudioUrl) {
+        URL.revokeObjectURL(userAudioUrl);
+      }
+      setUserAudioUrl(null);
+      audioChunksRef.current = [];
+
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          const mediaRecorder = new MediaRecorder(stream);
+          mediaRecorderRef.current = mediaRecorder;
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              audioChunksRef.current.push(event.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            setUserAudioUrl(audioUrl);
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+
+          playSynthSound([523.25, 659.25], 0.15, 'triangle');
+          setShadowState('recording');
+          setSelectedWordIndex(null);
+        })
+        .catch(err => {
+          console.warn("Microphone access denied or not supported, falling back to simulation:", err);
+          mediaRecorderRef.current = null;
+
+          playSynthSound([523.25, 659.25], 0.15, 'triangle');
+          setShadowState('recording');
+          setSelectedWordIndex(null);
+        });
+
     } else if (shadowState === 'recording') {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+
       playSynthSound([659.25, 523.25], 0.15, 'triangle');
       setShadowState('analyzing');
       setAnalyzingMessage("Aligning phonetic structures...");
@@ -458,6 +545,10 @@ export default function App() {
         });
       }, 2200);
     } else if (shadowState === 'result') {
+      if (userAudioUrl) {
+        URL.revokeObjectURL(userAudioUrl);
+      }
+      setUserAudioUrl(null);
       setShadowState('ready');
       setSelectedWordIndex(null);
       setPopoverCardId(null);
@@ -467,10 +558,25 @@ export default function App() {
   };
 
   // Play isolated audio for clicked word
-  const playWordAudio = (_word: WordItem, index: number, source: 'native' | 'user') => {
+  const playWordAudio = (word: WordItem, index: number, source: 'native' | 'user') => {
     setActiveAudioWord(index);
     if (source === 'native') {
-      playSynthSound([440, 554.37], 0.22, 'sine');
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const cleanWord = word.text.replace(/[^a-zA-Z-]/g, "");
+        const utterance = new SpeechSynthesisUtterance(cleanWord);
+        const voices = window.speechSynthesis.getVoices();
+        const usVoice = voices.find(voice => voice.lang.includes('en-US') && voice.name.toLowerCase().includes('google'))
+          || voices.find(voice => voice.lang.includes('en-US'))
+          || voices.find(voice => voice.lang.startsWith('en'));
+        if (usVoice) {
+          utterance.voice = usVoice;
+        }
+        utterance.rate = 0.85;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        playSynthSound([440, 554.37], 0.22, 'sine');
+      }
     } else {
       playSynthSound([420, 520], 0.22, 'sawtooth');
     }
@@ -493,6 +599,9 @@ export default function App() {
   // Wave paths for results and reference curves
   const nativeReferencePath = "M 0 12 C 12 5, 20 3, 30 12 C 40 21, 48 21, 58 12 C 68 3, 76 3, 86 12 C 92 19, 96 19, 100 12";
   const userResultPath = "M 0 12 C 12 6, 20 4, 30 12 C 34 12, 38 12, 42 12 C 46 12, 48 21, 58 12 C 68 4, 72 12, 75 12 C 78 12, 80 12, 86 12 C 92 18, 96 18, 100 12";
+
+  // Dynamic F0 Pitch paths and markers
+  const { nativePitchPath, userPitchPath, pitchMarkers } = generatePitchData(activeTranscriptWords);
 
   // Progress percentage out of 15 seconds
   const recordLimitPercent = Math.min((recordingMillis / 15) * 100, 100);
@@ -570,6 +679,9 @@ export default function App() {
           handleMainActionClick={handleMainActionClick}
           nativeReferencePath={nativeReferencePath}
           userResultPath={userResultPath}
+          playNativeSentence={playNativeSentence}
+          playUserRecording={playUserRecording}
+          userAudioUrl={userAudioUrl}
         />
 
         {/* SECTION 4: AI Feedback Hub */}
@@ -585,6 +697,12 @@ export default function App() {
           nativeReferencePath={nativeReferencePath}
           userResultPath={userResultPath}
           hasFinishedRecording={hasFinishedRecording}
+          playNativeSentence={playNativeSentence}
+          playUserRecording={playUserRecording}
+          userAudioUrl={userAudioUrl}
+          nativePitchPath={nativePitchPath}
+          userPitchPath={userPitchPath}
+          pitchMarkers={pitchMarkers}
         />
 
       </div>
