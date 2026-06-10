@@ -175,7 +175,6 @@ export default function App() {
   };
 
   const handleGenerateSentence = () => {
-    if (starredWords.length === 0) return;
     setIsGenerating(true);
     
     setSelectedWordIndex(null);
@@ -184,21 +183,30 @@ export default function App() {
     
     setTimeout(() => {
       let bestSentence = CANDIDATE_SENTENCES[0];
-      let maxMatches = -1;
       
-      CANDIDATE_SENTENCES.forEach(sentence => {
-        let matches = 0;
-        starredWords.forEach(starred => {
-          const regex = new RegExp(`\\b${starred}\\b`, 'i');
-          if (regex.test(sentence)) {
-            matches++;
+      if (starredWords.length > 0) {
+        let maxMatches = -1;
+        CANDIDATE_SENTENCES.forEach(sentence => {
+          let matches = 0;
+          starredWords.forEach(starred => {
+            const regex = new RegExp(`\\b${starred}\\b`, 'i');
+            if (regex.test(sentence)) {
+              matches++;
+            }
+          });
+          if (matches > maxMatches) {
+            maxMatches = matches;
+            bestSentence = sentence;
           }
         });
-        if (matches > maxMatches) {
-          maxMatches = matches;
-          bestSentence = sentence;
-        }
-      });
+      } else {
+        // Random sentence generator (default training mode)
+        const currentSentenceText = activeTranscriptWords.map(w => w.text).join(" ");
+        const otherSentences = CANDIDATE_SENTENCES.filter(s => s.toLowerCase() !== currentSentenceText.toLowerCase());
+        const pool = otherSentences.length > 0 ? otherSentences : CANDIDATE_SENTENCES;
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        bestSentence = pool[randomIndex];
+      }
       
       const rawWords = bestSentence.split(/\s+/);
       const newWordItems: WordItem[] = rawWords.map((word, idx) => {
