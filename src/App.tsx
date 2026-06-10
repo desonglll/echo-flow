@@ -6,6 +6,10 @@ import type { WordItem } from './types';
 import { transcriptWords } from './constants/transcript';
 import { playSynthSound, parseTimestamp } from './utils/audio';
 import { generatePitchData } from './utils/pitch';
+import {
+  loadProgress, saveProgress, loadStarredWords, saveStarredWords,
+  recordSession, type UserProgress, type SessionResult
+} from './utils/progressStore';
 
 // Components
 import { GlowFilters } from './components/GlowFilters';
@@ -15,6 +19,7 @@ import { Hero } from './components/Hero';
 import { PracticeArena } from './components/PracticeArena';
 import { DiagnosticsHub } from './components/DiagnosticsHub';
 import { DictionaryPopover } from './components/DictionaryPopover';
+import { CelebrationOverlay } from './components/CelebrationOverlay';
 import { Sparkles } from 'lucide-react';
 
 // AI Sentence Composition Database
@@ -95,12 +100,22 @@ export default function App() {
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number; height: number } | null>(null);
   const [popoverCardId, setPopoverCardId] = useState<number | null>(null);
   
-  // Starred vocabulary words list
-  const [starredWords, setStarredWords] = useState<string[]>([]);
+  // Starred vocabulary words list (loaded from localStorage)
+  const [starredWords, setStarredWords] = useState<string[]>(() => loadStarredWords());
   // AI sentence generation state
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   // Active target text in Practice Arena
   const [activeTranscriptWords, setActiveTranscriptWords] = useState<WordItem[]>(transcriptWords);
+
+  // ─── Gamification & Progress State ───
+  const [userProgress, setUserProgress] = useState<UserProgress>(() => loadProgress());
+  const [showCelebration, setShowCelebration] = useState<boolean>(false);
+  const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
+  // Dynamic scores (randomized per session for realism)
+  const [dynamicScore, setDynamicScore] = useState<number>(92);
+  const [dynamicPronunciation, setDynamicPronunciation] = useState<number>(94);
+  const [dynamicLiaisons, setDynamicLiaisons] = useState<number>(89);
+  const [dynamicIntonation, setDynamicIntonation] = useState<number>(91);
 
   // Mouse Follower Coordinates
   const [mousePos, setMousePos] = useState({ x: -450, y: -450 });
@@ -137,6 +152,11 @@ export default function App() {
       }
     };
   }, [userAudioUrl]);
+
+  // Persist starred words whenever they change
+  useEffect(() => {
+    saveStarredWords(starredWords);
+  }, [starredWords]);
 
   // Play native sentence via SpeechSynthesis
   const playNativeSentence = () => {
@@ -425,7 +445,7 @@ export default function App() {
       
       // Score count up animation
       setScoreCount(0);
-      const end = 92;
+      const end = dynamicScore;
       const duration = 1200; // ms
       const startTime = performance.now();
       
@@ -533,16 +553,32 @@ export default function App() {
         setAnalyzingMessage("Calculating pitch contours...");
       }, 1400);
 
-      // Finish analyzing and automatically scroll user to Section 3 (Analysis, scroll offset 300vh)
+      // Finish analyzing → generate dynamic scores → record session → show celebration
       setTimeout(() => {
+        // Generate dynamic scores based on recording length for realism
+        const timeBonus = Math.min(recordingMillis / 10, 1); // reward longer recordings
+        const baseScore = 70 + Math.floor(Math.random() * 20 * timeBonus + 5);
+        const finalScore = Math.min(baseScore, 99);
+        const pronScore = Math.min(finalScore + Math.floor(Math.random() * 6 - 2), 99);
+        const liaisonScore = Math.min(finalScore - Math.floor(Math.random() * 8), 99);
+        const intonScore = Math.min(finalScore + Math.floor(Math.random() * 4 - 1), 99);
+
+        setDynamicScore(finalScore);
+        setDynamicPronunciation(pronScore);
+        setDynamicLiaisons(liaisonScore);
+        setDynamicIntonation(intonScore);
+
+        // Record session & calculate XP
+        const { updatedProgress, result } = recordSession(userProgress, finalScore);
+        saveProgress(updatedProgress);
+        setUserProgress(updatedProgress);
+        setSessionResult(result);
+
         setShadowState('result');
         playSynthSound([523.25, 659.25, 783.99, 1046.50], 0.4, 'sine');
         
-        // Smooth scroll to Section 3 (Index 2, 300vh)
-        window.scrollTo({
-          top: 3 * window.innerHeight,
-          behavior: 'smooth'
-        });
+        // Show celebration overlay
+        setShowCelebration(true);
       }, 2200);
     } else if (shadowState === 'result') {
       if (userAudioUrl) {
@@ -651,6 +687,7 @@ export default function App() {
         starredWords={starredWords}
         onToggleStar={handleToggleStar}
         onGenerateSentence={handleGenerateSentence}
+        progress={userProgress}
       />
 
       {/* Right Side Navigation Dots Indicator */}
@@ -703,6 +740,10 @@ export default function App() {
           nativePitchPath={nativePitchPath}
           userPitchPath={userPitchPath}
           pitchMarkers={pitchMarkers}
+          dynamicScore={dynamicScore}
+          dynamicPronunciation={dynamicPronunciation}
+          dynamicLiaisons={dynamicLiaisons}
+          dynamicIntonation={dynamicIntonation}
         />
 
       </div>
@@ -725,6 +766,27 @@ export default function App() {
           }}
           isStarred={starredWords.some(w => w.toLowerCase() === activeTranscriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "").toLowerCase())}
           onToggleStar={handleToggleStar}
+        />
+      )}
+
+      {/* Celebration Overlay */}
+      {showCelebration && sessionResult && (
+        <CelebrationOverlay
+          score={dynamicScore}
+          xpEarned={sessionResult.xpEarned}
+          level={sessionResult.newLevel}
+          leveledUp={sessionResult.leveledUp}
+          previousLevel={sessionResult.previousLevel}
+          streak={sessionResult.newStreak}
+          isNewBest={sessionResult.isNewBest}
+          onContinue={() => {
+            setShowCelebration(false);
+            // Scroll to diagnostics
+            window.scrollTo({
+              top: 3 * window.innerHeight,
+              behavior: 'smooth'
+            });
+          }}
         />
       )}
 

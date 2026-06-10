@@ -21,12 +21,16 @@ interface DiagnosticsHubProps {
   nativePitchPath: string;
   userPitchPath: string;
   pitchMarkers: PitchMarker[];
+  dynamicScore: number;
+  dynamicPronunciation: number;
+  dynamicLiaisons: number;
+  dynamicIntonation: number;
 }
 
 export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
   selectedWordIndex,
   diagnosticSlideX,
-  scoreCount,
+  scoreCount: _scoreCount,
   metricsVisible,
   transcriptWords,
   activeAudioWord,
@@ -40,7 +44,11 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
   userAudioUrl,
   nativePitchPath,
   userPitchPath,
-  pitchMarkers
+  pitchMarkers,
+  dynamicScore,
+  dynamicPronunciation,
+  dynamicLiaisons,
+  dynamicIntonation
 }) => {
   const [isLargeScreen, setIsLargeScreen] = useState(true);
   const [activeChartTab, setActiveChartTab] = useState<'amplitude' | 'pitch' | 'fluency'>('amplitude');
@@ -194,7 +202,7 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                     </button>
                   )}
                   <span className="flex items-center gap-1.5 bg-[#10b981]/5 border border-[#10b981]/25 rounded-full px-2.5 py-1 text-[10px] text-[#10b981] font-bold font-mono">
-                    OVERALL MATCH: {scoreCount}%
+                    OVERALL MATCH: {dynamicScore}%
                   </span>
                 </div>
               </div>
@@ -479,13 +487,13 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                 <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left justify-center h-full">
                   <div className="flex justify-between items-center text-[10px] font-mono">
                     <span className="text-zinc-500 uppercase">Pronunciation</span>
-                    <span className="text-white font-bold">94%</span>
+                    <span className="text-white font-bold">{dynamicPronunciation}%</span>
                   </div>
                   <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
                     <div 
                       className="bg-[#10b981] h-full rounded-full" 
                       style={{ 
-                        width: metricsVisible ? '94%' : '0%',
+                        width: metricsVisible ? `${dynamicPronunciation}%` : '0%',
                         transition: 'width 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) 150ms'
                       }}
                     />
@@ -495,13 +503,13 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                 <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left justify-center h-full">
                   <div className="flex justify-between items-center text-[10px] font-mono">
                     <span className="text-zinc-500 uppercase">Liaisons</span>
-                    <span className="text-white font-bold">89%</span>
+                    <span className="text-white font-bold">{dynamicLiaisons}%</span>
                   </div>
                   <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
                     <div 
                       className="bg-[#fbbf24] h-full rounded-full" 
                       style={{ 
-                        width: metricsVisible ? '89%' : '0%',
+                        width: metricsVisible ? `${dynamicLiaisons}%` : '0%',
                         transition: 'width 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) 350ms'
                       }}
                     />
@@ -511,13 +519,13 @@ export const DiagnosticsHub: React.FC<DiagnosticsHubProps> = ({
                 <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1.5 text-left justify-center h-full">
                   <div className="flex justify-between items-center text-[10px] font-mono">
                     <span className="text-zinc-500 uppercase">Intonation</span>
-                    <span className="text-white font-bold">91%</span>
+                    <span className="text-white font-bold">{dynamicIntonation}%</span>
                   </div>
                   <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden mt-1">
                     <div 
                       className="bg-[#10b981] h-full rounded-full" 
                       style={{ 
-                        width: metricsVisible ? '91%' : '0%',
+                        width: metricsVisible ? `${dynamicIntonation}%` : '0%',
                         transition: 'width 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) 550ms'
                       }}
                     />
