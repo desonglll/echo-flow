@@ -154,6 +154,76 @@ export const DictionaryPopover: React.FC<DictionaryPopoverProps> = ({
           </div>
         )}
 
+        {/* Mouth Position Guide */}
+        {(word.type === 'liaison' || word.type === 'flat') && (
+          <div className="bg-[#121214] border border-zinc-800 rounded-lg p-3 flex flex-col gap-2 shrink-0">
+            <span className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 font-extrabold font-mono block">
+              Mouth Position Guide
+            </span>
+            
+            <div className="w-full flex items-center justify-center py-1 bg-zinc-950/60 rounded-md border border-zinc-900 overflow-hidden">
+              {word.type === 'liaison' ? (
+                <svg className="w-full h-[80px]" viewBox="0 0 140 70">
+                  <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                    </marker>
+                  </defs>
+                  {/* Palate (upper roof) */}
+                  <path d="M 15 10 Q 55 10 65 25 T 85 45" fill="none" stroke="#52525b" strokeWidth="2.5" />
+                  {/* Throat / Lower mouth */}
+                  <path d="M 15 60 Q 55 60 70 58 T 95 60" fill="none" stroke="#52525b" strokeWidth="2.5" />
+                  {/* Teeth */}
+                  <line x1="63" y1="23" x2="63" y2="29" stroke="#71717a" strokeWidth="2" />
+                  <line x1="68" y1="58" x2="68" y2="52" stroke="#71717a" strokeWidth="2" />
+                  {/* Tongue (in touch position) */}
+                  <path d="M 25 60 Q 45 58 58 50 Q 64 42 62 26 Q 59 40 50 50 Z" fill="rgba(16, 185, 129, 0.15)" stroke="#10b981" strokeWidth="2" />
+                  
+                  {/* Tongue slide arrow (release path) */}
+                  <path d="M 60 30 Q 56 42 45 46" fill="none" stroke="#10b981" strokeWidth="1.5" strokeDasharray="3 2" markerEnd="url(#arrow)" />
+                  
+                  {/* Annotations */}
+                  <text x="72" y="18" fill="#a1a1aa" fontSize="7" fontFamily="monospace">Alveolar Ridge</text>
+                  <line x1="70" y1="17" x2="63" y2="22" stroke="#52525b" strokeWidth="0.5" />
+                  
+                  <text x="18" y="38" fill="#a1a1aa" fontSize="7" fontFamily="monospace">Tongue Contact</text>
+                  <line x1="36" y1="40" x2="55" y2="44" stroke="#52525b" strokeWidth="0.5" />
+                </svg>
+              ) : (
+                <svg className="w-full h-[80px]" viewBox="0 0 140 70">
+                  <defs>
+                    <marker id="arrowGreen" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                    </marker>
+                  </defs>
+                  
+                  {/* Left Side: Flat Lips */}
+                  <g transform="translate(-10, 0)">
+                    <text x="45" y="15" fill="#ef4444" fontSize="7" fontFamily="monospace" textAnchor="middle" fontWeight="bold">Flat (Incorrect)</text>
+                    <ellipse cx="45" cy="40" rx="24" ry="7" fill="rgba(239, 68, 68, 0.05)" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 2" />
+                    {/* Horizontal tension lines */}
+                    <line x1="16" y1="40" x2="8" y2="40" stroke="#ef4444" strokeWidth="1" />
+                    <line x1="74" y1="40" x2="82" y2="40" stroke="#ef4444" strokeWidth="1" />
+                    <text x="45" y="60" fill="#71717a" fontSize="6.5" textAnchor="middle">Lips pulled back</text>
+                  </g>
+
+                  {/* Right Side: Open Lips */}
+                  <g transform="translate(10, 0)">
+                    <text x="95" y="15" fill="#10b981" fontSize="7" fontFamily="monospace" textAnchor="middle" fontWeight="bold">Open & Rounded</text>
+                    <ellipse cx="95" cy="40" rx="16" ry="14" fill="rgba(16, 185, 129, 0.15)" stroke="#10b981" strokeWidth="2" />
+                    
+                    {/* Vertical expansion indicators */}
+                    <path d="M 95 22 L 95 14" fill="none" stroke="#10b981" strokeWidth="1.2" markerEnd="url(#arrowGreen)" />
+                    <path d="M 95 58 L 95 66" fill="none" stroke="#10b981" strokeWidth="1.2" markerEnd="url(#arrowGreen)" />
+                    
+                    <text x="95" y="60" fill="#a1a1aa" fontSize="6.5" textAnchor="middle">Drop jaw vertically ↕</text>
+                  </g>
+                </svg>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* AI Tip Box */}
         <div className="bg-[#121214] border border-zinc-800 rounded-lg p-3 text-[12px] text-zinc-200 leading-relaxed shrink-0">
           <span className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 font-extrabold font-mono block mb-1.5">AI Speech Coach Tip</span>
