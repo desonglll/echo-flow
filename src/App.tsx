@@ -14,6 +14,72 @@ import { Hero } from './components/Hero';
 import { PracticeArena } from './components/PracticeArena';
 import { DiagnosticsHub } from './components/DiagnosticsHub';
 import { DictionaryPopover } from './components/DictionaryPopover';
+import { Sparkles } from 'lucide-react';
+
+// AI Sentence Composition Database
+const COMMON_DICTIONARY: Record<string, { ipa: string; definition: string }> = {
+  "the": { ipa: "ðə", definition: "art. 这，那（特指）" },
+  "future": { ipa: "ˈfjuː.tʃər", definition: "n. 未来，前途 | adj. 未来的" },
+  "of": { ipa: "əv", definition: "prep. 属于……的，关于" },
+  "llms": { ipa: "el.el.emz", definition: "n. 大语言模型 (LLMs)" },
+  "and": { ipa: "ænd", definition: "conj. 和, 且, 与, 而且" },
+  "agentic": { ipa: "əˈdʒen.tɪk", definition: "adj. 智能体的，代理的" },
+  "workflows": { ipa: "ˈwɜːk.fləʊz", definition: "n. 工作流，工作步骤" },
+  "will": { ipa: "wɪl", definition: "v. 将，会" },
+  "require": { ipa: "rɪˈkwaɪər", definition: "v. 需要，要求" },
+  "human-in-the-loop": { ipa: "ˌhjuː.mən.ɪn.ðə.luːp", definition: "n. 人机协同，人机回环" },
+  "autonomous": { ipa: "ɔːˈtɒn.ə.məs", definition: "adj. 自主的，自治的" },
+  "feedback": { ipa: "ˈfiːd.bæk", definition: "n. 反馈，反馈信息" },
+  "loops": { ipa: "luːps", definition: "n. 循环，回路（复数）" },
+  "loop": { ipa: "luːp", definition: "n. 循环，圈" },
+  "we": { ipa: "wiː", definition: "pron. 我们" },
+  "can": { ipa: "kæn", definition: "v. 能，可以" },
+  "build": { ipa: "bɪld", definition: "v. 建造，构建" },
+  "better": { ipa: "ˈbet.ər", definition: "adj. 更好的" },
+  "systems": { ipa: "ˈsɪs.təmz", definition: "n. 系统（复数）" },
+  "system": { ipa: "ˈsɪs.təm", definition: "n. 系统" },
+  "with": { ipa: "wɪð", definition: "prep. 具有，带有，和……一起" },
+  "this": { ipa: "ðɪs", definition: "pron. 这，这个" },
+  "new": { ipa: "njuː", definition: "adj. 新的" },
+  "technology": { ipa: "tekˈnɒl.ə.dʒi", definition: "n. 技术，科技" },
+  "to": { ipa: "tuː", definition: "prep. 向，到，对于" },
+  "optimize": { ipa: "ˈɒp.tɪ.maɪz", definition: "v. 优化，使最优化" },
+  "our": { ipa: "ˈaʊ.ər", definition: "pron. 我们的" },
+  "performance": { ipa: "pəˈfɔː.məns", definition: "n. 表现，性能，绩效" },
+  "ai": { ipa: "ˌeɪˈaɪ", definition: "n. 人工智能 (AI)" },
+  "models": { ipa: "ˈmɒd.əlz", definition: "n. 模型（复数）" },
+  "model": { ipa: "ˈmɒd.əl", definition: "n. 模型" },
+  "for": { ipa: "fɔːr", definition: "prep. 为了，给，因为" },
+  "enhanced": { ipa: "ɪnˈhɑːnst", definition: "adj. 增强的，提高的" },
+  "accuracy": { ipa: "ˈæk.jə.rə.si", definition: "n. 精确度，准确性" },
+  "active": { ipa: "ˈæk.tɪv", definition: "adj. 积极的，活跃的" },
+  "learning": { ipa: "ˈlɜː.nɪŋ", definition: "n. 学习，学问" },
+  "networks": { ipa: "ˈnet.wɜːks", definition: "n. 网络（复数）" },
+  "network": { ipa: "ˈnet.wɜːk", definition: "n. 网络" },
+  "neural": { ipa: "ˈnjʊə.rəl", definition: "adj. 神经的，神经系统的" },
+  "leverages": { ipa: "ˈliː.vər.ɪdʒ.ɪz", definition: "v. 杠杆化，利用" },
+  "advanced": { ipa: "ədˈvɑːnst", definition: "adj. 先进的，高级的" },
+  "capture": { ipa: "ˈkæp.tʃər", definition: "v. 捕捉，捕获" },
+  "spoken": { ipa: "ˈspəʊ.kən", definition: "adj. 口语的，口头的" },
+  "audio": { ipa: "ˈɔː.di.əʊ", definition: "n. 音频，声音" },
+  "deliver": { ipa: "dɪˈlɪv.ər", definition: "v. 交付，递送，表达" },
+  "high": { ipa: "haɪ", definition: "adj. 高的" },
+  "fidelity": { ipa: "fɪˈdel.ə.ti", definition: "n. 保真度，忠诚" },
+  "real-time": { ipa: "ˌrɪəlˈtaɪm", definition: "adj. 实时的" },
+  "speech": { ipa: "spiːtʃ", definition: "n. 演讲，语音，说话" },
+  "diagnostics": { ipa: "ˌdaɪ.əɡˈnɒs.tɪks", definition: "n. 诊断，诊断学" }
+};
+
+const CANDIDATE_SENTENCES: string[] = [
+  "We can optimize our workflows and systems for the future of LLMs.",
+  "Autonomous feedback loops require active neural networks to optimize performance.",
+  "This technology leverages agentic AI models with advanced diagnostics.",
+  "The neural workflows will require a human-in-the-loop to analyze feedback.",
+  "Deep neural networks deliver high fidelity speech diagnostics in real-time.",
+  "EchoFlow leverages advanced agentic workflows for autonomous voice feedback.",
+  "The future LLMs will require high fidelity autonomous feedback loops.",
+  "AI speech diagnostics will require a human-in-the-loop for advanced workflows."
+];
 
 export default function App() {
   // Scrollytelling active state tracker
@@ -28,6 +94,13 @@ export default function App() {
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number; height: number } | null>(null);
   const [popoverCardId, setPopoverCardId] = useState<number | null>(null);
   
+  // Starred vocabulary words list
+  const [starredWords, setStarredWords] = useState<string[]>([]);
+  // AI sentence generation state
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  // Active target text in Practice Arena
+  const [activeTranscriptWords, setActiveTranscriptWords] = useState<WordItem[]>(transcriptWords);
+
   // Mouse Follower Coordinates
   const [mousePos, setMousePos] = useState({ x: -450, y: -450 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,6 +158,107 @@ export default function App() {
       setSelectedWordIndex(index);
       setPopoverCardId(cardId);
     }
+  };
+
+  const handleToggleStar = (wordText: string) => {
+    const cleanWord = wordText.replace(/[^a-zA-Z]/g, "");
+    if (!cleanWord) return;
+
+    setStarredWords(prev => {
+      const exists = prev.some(w => w.toLowerCase() === cleanWord.toLowerCase());
+      if (exists) {
+        return prev.filter(w => w.toLowerCase() !== cleanWord.toLowerCase());
+      } else {
+        return [...prev, cleanWord];
+      }
+    });
+  };
+
+  const handleGenerateSentence = () => {
+    if (starredWords.length === 0) return;
+    setIsGenerating(true);
+    
+    setSelectedWordIndex(null);
+    setPopoverPosition(null);
+    setPopoverCardId(null);
+    
+    setTimeout(() => {
+      let bestSentence = CANDIDATE_SENTENCES[0];
+      let maxMatches = -1;
+      
+      CANDIDATE_SENTENCES.forEach(sentence => {
+        let matches = 0;
+        starredWords.forEach(starred => {
+          const regex = new RegExp(`\\b${starred}\\b`, 'i');
+          if (regex.test(sentence)) {
+            matches++;
+          }
+        });
+        if (matches > maxMatches) {
+          maxMatches = matches;
+          bestSentence = sentence;
+        }
+      });
+      
+      const rawWords = bestSentence.split(/\s+/);
+      const newWordItems: WordItem[] = rawWords.map((word, idx) => {
+        const cleanWordForLookup = word.toLowerCase().replace(/[^a-z-]/g, "");
+        const dictEntry = COMMON_DICTIONARY[cleanWordForLookup] || {
+          ipa: `/${cleanWordForLookup}/`,
+          definition: `Word: ${word}`
+        };
+
+        const isStarred = starredWords.some(sw => sw.toLowerCase() === cleanWordForLookup.toLowerCase());
+        
+        let type: 'perfect' | 'liaison' | 'flat' | 'none' = 'none';
+        let accuracy: 'good' | 'average' | 'poor' = 'good';
+        let tip = "Standard vocal articulation.";
+
+        if (isStarred) {
+          if (idx % 2 === 0) {
+            type = 'liaison';
+            accuracy = 'average';
+            tip = `✨ AI Tip: Focus on linking '${word}' smoothly into the next sound.`;
+          } else {
+            type = 'flat';
+            accuracy = 'poor';
+            tip = `❌ AI Tip: Pronunciation of '${word}' was flat. Lift soft palate and round lips.`;
+          }
+        } else {
+          if (idx % 3 === 0) {
+            type = 'perfect';
+            accuracy = 'good';
+            tip = "Clean stop consonant articulation.";
+          }
+        }
+
+        const timeSec = idx * 0.7 + 0.4;
+        const minutes = Math.floor(timeSec / 60);
+        const seconds = (timeSec % 60).toFixed(1);
+        const timestamp = `${minutes}:${seconds.padStart(4, '0')}`;
+
+        return {
+          text: word,
+          type,
+          ipa: dictEntry.ipa,
+          tip,
+          definition: dictEntry.definition,
+          timestamp,
+          accuracy
+        };
+      });
+
+      setActiveTranscriptWords(newWordItems);
+      setShadowState('ready');
+      setRecordingMillis(0);
+      setWavePoints(Array.from({ length: 30 }, () => 12));
+      setIsGenerating(false);
+
+      window.scrollTo({
+        top: window.innerHeight,
+        behavior: 'smooth'
+      });
+    }, 1500);
   };
 
   // Scroll tracker logic
@@ -299,10 +473,10 @@ export default function App() {
 
   // Find index of the currently spoken/transcribed word during recording
   const currentActiveWordIndex = shadowState === 'recording'
-    ? transcriptWords.findIndex((item, idx) => {
+    ? activeTranscriptWords.findIndex((item, idx) => {
         const wordTime = parseTimestamp(item.timestamp);
-        const nextWordTime = idx < transcriptWords.length - 1 
-          ? parseTimestamp(transcriptWords[idx + 1].timestamp) 
+        const nextWordTime = idx < activeTranscriptWords.length - 1 
+          ? parseTimestamp(activeTranscriptWords[idx + 1].timestamp) 
           : 999;
         return recordingMillis >= wordTime && recordingMillis < nextWordTime;
       })
@@ -354,7 +528,13 @@ export default function App() {
       />
 
       {/* Fixed Left Sidebar Panel */}
-      <Sidebar activeSection={activeSection} hasFinishedRecording={hasFinishedRecording} />
+      <Sidebar 
+        activeSection={activeSection} 
+        hasFinishedRecording={hasFinishedRecording} 
+        starredWords={starredWords}
+        onToggleStar={handleToggleStar}
+        onGenerateSentence={handleGenerateSentence}
+      />
 
       {/* Right Side Navigation Dots Indicator */}
       <NavigationDots activeSection={activeSection} hasFinishedRecording={hasFinishedRecording} />
@@ -377,7 +557,7 @@ export default function App() {
           wavePoints={wavePoints}
           analyzingProgress={analyzingProgress}
           analyzingMessage={analyzingMessage}
-          transcriptWords={transcriptWords}
+          transcriptWords={activeTranscriptWords}
           handleWordClick={handleWordClick}
           handleMainActionClick={handleMainActionClick}
           nativeReferencePath={nativeReferencePath}
@@ -390,7 +570,7 @@ export default function App() {
           diagnosticSlideX={diagnosticSlideX}
           scoreCount={scoreCount}
           metricsVisible={metricsVisible}
-          transcriptWords={transcriptWords}
+          transcriptWords={activeTranscriptWords}
           activeAudioWord={activeAudioWord}
           handleWordClick={handleWordClick}
           playWordAudio={playWordAudio}
@@ -404,7 +584,7 @@ export default function App() {
       {/* Global Dictionary Popover */}
       {selectedWordIndex !== null && popoverPosition && (
         <DictionaryPopover
-          word={transcriptWords[selectedWordIndex]}
+          word={activeTranscriptWords[selectedWordIndex]}
           popoverDirection={popoverDirection}
           popoverPosition={popoverPosition}
           onClose={() => {
@@ -415,9 +595,38 @@ export default function App() {
           onPlayAudio={(source) => {
             setSelectedWordIndex(null);
             setPopoverPosition(null);
-            playWordAudio(transcriptWords[selectedWordIndex!], selectedWordIndex!, source);
+            playWordAudio(activeTranscriptWords[selectedWordIndex!], selectedWordIndex!, source);
           }}
+          isStarred={starredWords.some(w => w.toLowerCase() === activeTranscriptWords[selectedWordIndex].text.replace(/[^a-zA-Z]/g, "").toLowerCase())}
+          onToggleStar={handleToggleStar}
         />
+      )}
+
+      {/* AI Processing Modal Overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-zinc-950/85 backdrop-blur-md z-100 flex flex-col items-center justify-center gap-6 animate-fade-in">
+          <div className="relative flex items-center justify-center">
+            {/* Glowing ring */}
+            <div className="absolute -inset-4 rounded-full border border-emerald-500/20 ring-glow-active" />
+            
+            {/* Bounce logo card */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 animate-bounce">
+              <Sparkles className="w-8 h-8 fill-current" />
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-center gap-1 text-center">
+            <h3 className="text-base font-bold text-white tracking-wide font-sans">AI Speech Coach</h3>
+            <p className="text-xs text-zinc-400 max-w-[240px] leading-relaxed font-sans">
+              Composing custom practice sentence containing your vocabulary words...
+            </p>
+          </div>
+          
+          {/* Progress bar */}
+          <div className="w-[180px] bg-zinc-900 border border-zinc-800 h-1.5 rounded-full overflow-hidden">
+            <div className="bg-emerald-500 h-full rounded-full animate-loading-bar" />
+          </div>
+        </div>
       )}
     </div>
   );

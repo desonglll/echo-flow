@@ -1,12 +1,21 @@
 import React from 'react';
-import { ChevronRight, Zap } from 'lucide-react';
+import { ChevronRight, Zap, Sparkles } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: number;
   hasFinishedRecording: boolean;
+  starredWords: string[];
+  onToggleStar: (wordText: string) => void;
+  onGenerateSentence: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeSection, hasFinishedRecording }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  activeSection, 
+  hasFinishedRecording,
+  starredWords,
+  onToggleStar,
+  onGenerateSentence
+}) => {
   return (
     <aside className="fixed left-0 top-0 h-screen w-[260px] border-r border-[#222226]/40 bg-[#09090b]/80 backdrop-blur-md flex flex-col justify-between shrink-0 z-30">
       <div className="flex flex-col">
@@ -58,6 +67,46 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, hasFinishedReco
             );
           })}
         </nav>
+
+        {/* Vocabulary Section */}
+        <div className="px-4 py-4 border-t border-[#222226]/40 flex flex-col gap-3">
+          <span className="text-[9px] uppercase tracking-[0.18em] text-zinc-650 font-semibold font-mono px-3">Vocabulary Book ({starredWords.length})</span>
+          {starredWords.length > 0 ? (
+            <div className="flex flex-col gap-3 px-3">
+              <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar">
+                {starredWords.map((word, idx) => (
+                  <span 
+                    key={idx} 
+                    className="px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-800/80 text-[11px] text-zinc-300 font-medium flex items-center gap-1 hover:border-zinc-700 transition-colors animate-word-pop"
+                  >
+                    {word.replace(/[^a-zA-Z]/g, "")}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleStar(word);
+                      }}
+                      className="text-zinc-600 hover:text-red-400 focus:outline-none ml-0.5 font-bold cursor-pointer"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
+              
+              <button
+                onClick={onGenerateSentence}
+                className="w-full py-2 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs transition-all duration-300 shadow-md shadow-emerald-950/20 hover:scale-102 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 fill-current" />
+                AI Generate Drill
+              </button>
+            </div>
+          ) : (
+            <div className="text-[10px] text-zinc-500 italic leading-relaxed px-3">
+              Click word popovers and star vocabulary words to compose a custom AI practice drill.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* User Card */}

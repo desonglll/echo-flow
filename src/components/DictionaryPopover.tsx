@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Play } from 'lucide-react';
+import { X, Play, Star } from 'lucide-react';
 import type { WordItem } from '../types';
 
 interface DictionaryPopoverProps {
@@ -8,6 +8,8 @@ interface DictionaryPopoverProps {
   popoverPosition: { top: number; left: number; height: number };
   onClose: () => void;
   onPlayAudio: (source: 'native' | 'user') => void;
+  isStarred: boolean;
+  onToggleStar: (wordText: string) => void;
 }
 
 export const DictionaryPopover: React.FC<DictionaryPopoverProps> = ({
@@ -15,7 +17,9 @@ export const DictionaryPopover: React.FC<DictionaryPopoverProps> = ({
   popoverDirection,
   popoverPosition,
   onClose,
-  onPlayAudio
+  onPlayAudio,
+  isStarred,
+  onToggleStar
 }) => {
   const popoverWidth = Math.min(300, window.innerWidth - 32);
   const halfWidth = popoverWidth / 2;
@@ -43,6 +47,16 @@ export const DictionaryPopover: React.FC<DictionaryPopoverProps> = ({
           <span className="font-extrabold text-white text-base font-sans">
             {word.text.replace(/[^a-zA-Z]/g, "")}
           </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleStar(word.text);
+            }}
+            className="p-1 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-yellow-400 cursor-pointer transition-colors"
+            title={isStarred ? "Remove from Vocabulary" : "Add to Vocabulary"}
+          >
+            <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-400'}`} />
+          </button>
           <span className="text-[12px] text-zinc-350 font-mono bg-zinc-900 px-1.5 py-0.5 rounded">
             {word.ipa}
           </span>
